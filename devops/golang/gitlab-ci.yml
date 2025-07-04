@@ -1,0 +1,195 @@
+stages:
+  - test
+  - security
+  - build
+  - deploy-staging
+  - deploy-production
+
+variables:
+  GO_VERSION: "1.21"
+  DOCKER_REGISTRY: "registry.gitlab.com"
+  DOCKER_IMAGE: "$CI_REGISTRY_IMAGE"
+  CGO_ENABLED: "0"
+
+cache:
+  key: 
+    files:
+      - go.sum
+  paths:
+    - .cache/go-build/
+    - .cache/go-mod/
+
+test:unit:
+  stage: test
+  image: golang:${GO_VERSION}-alpine
+  before_script:
+    - go mod download
+  script:
+    - go vet ./...
+    - go install golang.org/x/lint/golint@latest
+    - golint -set_exit_status ./...
+    - go test -v -race -coverprofile=coverage.out -covermode=atomic ./...
+    - go tool cover -html=coverage.out -o coverage.html
+  coverage: '/coverage: \d+\.\d+% of statements/'
+  artifacts:
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage.out
+    paths:
+      - coverage.out
+      - coverage.html
+    expire_in: 1 week
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+test:integration:
+  stage: test
+  image: golang:${GO_VERSION}-alpine
+  services:
+    - name: postgres:13-alpine
+      alias: postgres
+  variables:
+    POSTGRES_DB: test_db
+    POSTGRES_USER: test_user
+    POSTGRES_PASSWORD: test_password
+    DATABASE_URL: "postgresql://test_user:test_password@postgres:5432/test_db"
+  before_script:
+    - go mod download
+  script:
+    - go test -v -tags=integration ./...
+  artifacts:
+    paths:
+      - test-results/
+    expire_in: 1 week
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+security:gosec:
+  stage: security
+  image: golang:${GO_VERSION}-alpine
+  before_script:
+    - go mod download
+    - go install github.com/securecodewarrior/gosec/v2/cmd/gosec@latest
+  script:
+    - gosec -fmt json -out gosec-report.json ./...
+  artifacts:
+    paths:
+      - gosec-report.json
+    expire_in: 1 week
+  allow_failure: true
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+build:binaries:
+  stage: build
+  image: golang:${GO_VERSION}-alpine
+  before_script:
+    - go mod download
+  script:
+    - mkdir -p bin
+    - GOOS=linux GOARCH=amd64 go build -o bin/app-linux-amd64 ./cmd/main.go
+    - GOOS=linux GOARCH=arm64 go build -o bin/app-linux-arm64 ./cmd/main.go
+    - GOOS=windows GOARCH=amd64 go build -o bin/app-windows-amd64.exe ./cmd/main.go
+    - GOOS=darwin GOARCH=amd64 go build -o bin/app-darwin-amd64 ./cmd/main.go
+  artifacts:
+    paths:
+      - bin/
+    expire_in: 1 week
+  dependencies:
+    - test:unit
+    - test:integration
+    - security:gosec
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+build:docker:
+  stage: build
+  image: docker:20.10.16
+  services:
+    - docker:20.10.16-dind
+  variables:
+    DOCKER_TLS_CERTDIR: "/certs"
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    - docker build -t $DOCKER_IMAGE:$CI_COMMIT_SHA .
+    - docker build -t $DOCKER_IMAGE:latest .
+    - docker push $DOCKER_IMAGE:$CI_COMMIT_SHA
+    - docker push $DOCKER_IMAGE:latest
+  dependencies:
+    - test:unit
+    - test:integration
+    - security:gosec
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+deploy:staging:
+  stage: deploy-staging
+  image: alpine:latest
+  before_script:
+    - apk add --no-cache curl
+  script:
+    - echo "Deploying to staging environment..."
+    - curl -X POST $STAGING_WEBHOOK_URL \
+        -H "Content-Type: application/json" \
+        -d "{\"image\": \"$DOCKER_IMAGE:$CI_COMMIT_SHA\"}"
+    - echo "Waiting for deployment to complete..."
+    - sleep 30
+    - echo "Running smoke tests..."
+    - curl -f $STAGING_HEALTH_CHECK_URL || exit 1
+  environment:
+    name: staging
+    url: $STAGING_URL
+  dependencies:
+    - build:docker
+  rules:
+    - if: $CI_COMMIT_BRANCH == "develop"
+
+deploy:production:
+  stage: deploy-production
+  image: alpine:latest
+  before_script:
+    - apk add --no-cache curl
+  script:
+    - echo "Deploying to production environment..."
+    - curl -X POST $PRODUCTION_WEBHOOK_URL \
+        -H "Content-Type: application/json" \
+        -d "{\"image\": \"$DOCKER_IMAGE:$CI_COMMIT_SHA\"}"
+    - echo "Waiting for deployment to complete..."
+    - sleep 60
+    - echo "Running health checks..."
+    - curl -f $PRODUCTION_HEALTH_CHECK_URL || exit 1
+  environment:
+    name: production
+    url: $PRODUCTION_URL
+  dependencies:
+    - build:docker
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+  when: manual
+
+notify:slack:
+  stage: .post
+  image: alpine:latest
+  before_script:
+    - apk add --no-cache curl
+  script:
+    - |
+      if [ "$CI_JOB_STATUS" == "success" ]; then
+        EMOJI="✅"
+        COLOR="good"
+      else
+        EMOJI="❌"
+        COLOR="danger"
+      fi
+      
+      curl -X POST $SLACK_WEBHOOK_URL \
+        -H "Content-Type: application/json" \
+        -d "{\"attachments\": [{\"color\": \"$COLOR\",\"title\": \"$EMOJI Pipeline $CI_JOB_STATUS\",\"text\": \"Repository: $CI_PROJECT_NAME\nBranch: $CI_COMMIT_REF_NAME\nCommit: $CI_COMMIT_SHORT_SHA\",\"fields\": [{\"title\": \"Pipeline URL\",\"value\": \"$CI_PIPELINE_URL\",\"short\": true}]}]}"
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH 

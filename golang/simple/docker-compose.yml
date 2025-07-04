@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=password
+      - DB_NAME=crud_example
+      - DB_SSL_MODE=disable
+      - JWT_SECRET=your-secret-key-here
+      - JWT_EXPIRATION=24h
+      - PORT=8080
+      - ENVIRONMENT=development
+      - GIN_MODE=release
+    depends_on:
+      - postgres
+    restart: unless-stopped
+    networks:
+      - crud-network
+
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_DB=crud_example
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - crud-network
+
+  # Optional: Redis for caching
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    networks:
+      - crud-network
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  crud-network:
+    driver: bridge 

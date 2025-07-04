@@ -1,0 +1,46 @@
+# Deployment simple para una API
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: simple-api
+  labels:
+    app: simple-api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: simple-api
+  template:
+    metadata:
+      labels:
+        app: simple-api
+    spec:
+      containers:
+      - name: simple-api
+        image: nginx:alpine
+        ports:
+        - containerPort: 80
+        env:
+        - name: NODE_ENV
+          value: "production"
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+---
+# Service para exponer la aplicación
+apiVersion: v1
+kind: Service
+metadata:
+  name: simple-api-service
+spec:
+  selector:
+    app: simple-api
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+  type: LoadBalancer 

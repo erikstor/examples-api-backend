@@ -1,0 +1,16 @@
+# Ejemplo más básico: Un solo Pod
+apiVersion: v1
+kind: Pod
+metadata:
+  name: basic-pod
+  labels:
+    app: basic-app
+spec:
+  containers:
+  - name: basic-container
+    image: nginx:alpine
+    ports:
+    - containerPort: 80
+    env:
+    - name: MESSAGE
+      value: "¡Hola desde Kubernetes!" 

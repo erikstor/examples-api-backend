@@ -1,0 +1,243 @@
+version: '3.8'
+
+services:
+  # Base de datos principal
+  postgres:
+    image: postgres:15-alpine
+    container_name: api_postgres_dev
+    environment:
+      POSTGRES_DB: api_dev
+      POSTGRES_USER: dev_user
+      POSTGRES_PASSWORD: dev_password
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-scripts:/docker-entrypoint-initdb.d
+    networks:
+      - api_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dev_user -d api_dev"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis para cache
+  redis:
+    image: redis:7-alpine
+    container_name: api_redis_dev
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - api_network
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # MongoDB (si se necesita)
+  mongodb:
+    image: mongo:6
+    container_name: api_mongodb_dev
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: dev_user
+      MONGO_INITDB_ROOT_PASSWORD: dev_password
+      MONGO_INITDB_DATABASE: api_dev
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - api_network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Aplicación Node.js/TypeScript
+  api-nodejs:
+    build:
+      context: ../../nodejs/simple
+      dockerfile: Dockerfile
+    container_name: api_nodejs_dev
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      DATABASE_URL: postgresql://dev_user:dev_password@postgres:5432/api_dev
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: dev_jwt_secret_key
+    ports:
+      - "3000:3000"
+    volumes:
+      - ../../nodejs/simple:/app
+      - /app/node_modules
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - api_network
+    command: npm run dev
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Aplicación Python
+  api-python:
+    build:
+      context: ../../python/simple
+      dockerfile: Dockerfile
+    container_name: api_python_dev
+    environment:
+      ENVIRONMENT: development
+      DATABASE_URL: postgresql://dev_user:dev_password@postgres:5432/api_dev
+      REDIS_URL: redis://redis:6379
+      SECRET_KEY: dev_secret_key
+    ports:
+      - "8000:8000"
+    volumes:
+      - ../../python/simple:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - api_network
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Aplicación Golang
+  api-golang:
+    build:
+      context: ../../golang/simple
+      dockerfile: Dockerfile
+    container_name: api_golang_dev
+    environment:
+      ENV: development
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: dev_user
+      DB_PASSWORD: dev_password
+      DB_NAME: api_dev
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      JWT_SECRET: dev_jwt_secret_key
+    ports:
+      - "8080:8080"
+    volumes:
+      - ../../golang/simple:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - api_network
+    command: go run main.go
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Nginx como reverse proxy
+  nginx:
+    image: nginx:alpine
+    container_name: api_nginx_dev
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - api-nodejs
+      - api-python
+      - api-golang
+    networks:
+      - api_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Prometheus para monitoreo
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: api_prometheus_dev
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    networks:
+      - api_network
+
+  # Grafana para visualización
+  grafana:
+    image: grafana/grafana:latest
+    container_name: api_grafana_dev
+    ports:
+      - "3001:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+    depends_on:
+      - prometheus
+    networks:
+      - api_network
+
+  # Jaeger para tracing distribuido
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: api_jaeger_dev
+    ports:
+      - "16686:16686"
+      - "14268:14268"
+    environment:
+      COLLECTOR_OTLP_ENABLED: true
+    networks:
+      - api_network
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  mongodb_data:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+
+networks:
+  api_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16 

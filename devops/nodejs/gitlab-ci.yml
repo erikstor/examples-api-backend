@@ -1,0 +1,191 @@
+stages:
+  - install
+  - test
+  - security
+  - build
+  - deploy-staging
+  - deploy-production
+
+variables:
+  NODE_VERSION: "18"
+  DOCKER_REGISTRY: "registry.gitlab.com"
+  DOCKER_IMAGE: "$CI_REGISTRY_IMAGE"
+
+cache:
+  key: 
+    files:
+      - package-lock.json
+  paths:
+    - node_modules/
+    - .npm/
+
+.install_template: &install_template
+  stage: install
+  image: node:${NODE_VERSION}-alpine
+  before_script:
+    - npm ci --cache .npm --prefer-offline
+  artifacts:
+    paths:
+      - node_modules/
+    expire_in: 1 hour
+
+install:
+  <<: *install_template
+
+test:unit:
+  stage: test
+  image: node:${NODE_VERSION}-alpine
+  dependencies:
+    - install
+  script:
+    - npm run test:unit
+    - npm run lint
+  coverage: '/All files[^|]*\|[^|]*\s+([\d\.]+)/'
+  artifacts:
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage/cobertura-coverage.xml
+    paths:
+      - coverage/
+    expire_in: 1 week
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+test:integration:
+  stage: test
+  image: node:${NODE_VERSION}-alpine
+  dependencies:
+    - install
+  services:
+    - name: postgres:13-alpine
+      alias: postgres
+  variables:
+    POSTGRES_DB: test_db
+    POSTGRES_USER: test_user
+    POSTGRES_PASSWORD: test_password
+    DATABASE_URL: "postgresql://test_user:test_password@postgres:5432/test_db"
+  script:
+    - npm run test:e2e
+  artifacts:
+    paths:
+      - test-results/
+    expire_in: 1 week
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+security:audit:
+  stage: security
+  image: node:${NODE_VERSION}-alpine
+  dependencies:
+    - install
+  script:
+    - npm audit --audit-level=moderate
+    - npm audit fix --dry-run
+  allow_failure: true
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+security:snyk:
+  stage: security
+  image: snyk/snyk:node
+  dependencies:
+    - install
+  script:
+    - snyk test --severity-threshold=high
+  allow_failure: true
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+build:
+  stage: build
+  image: docker:20.10.16
+  services:
+    - docker:20.10.16-dind
+  variables:
+    DOCKER_TLS_CERTDIR: "/certs"
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    - docker build -t $DOCKER_IMAGE:$CI_COMMIT_SHA .
+    - docker build -t $DOCKER_IMAGE:latest .
+    - docker push $DOCKER_IMAGE:$CI_COMMIT_SHA
+    - docker push $DOCKER_IMAGE:latest
+  dependencies:
+    - test:unit
+    - test:integration
+    - security:audit
+    - security:snyk
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+deploy:staging:
+  stage: deploy-staging
+  image: alpine:latest
+  before_script:
+    - apk add --no-cache curl
+  script:
+    - echo "Deploying to staging environment..."
+    - curl -X POST $STAGING_WEBHOOK_URL \
+        -H "Content-Type: application/json" \
+        -d "{\"image\": \"$DOCKER_IMAGE:$CI_COMMIT_SHA\"}"
+    - echo "Waiting for deployment to complete..."
+    - sleep 30
+    - echo "Running smoke tests..."
+    - curl -f $STAGING_HEALTH_CHECK_URL || exit 1
+  environment:
+    name: staging
+    url: $STAGING_URL
+  dependencies:
+    - build
+  rules:
+    - if: $CI_COMMIT_BRANCH == "develop"
+
+deploy:production:
+  stage: deploy-production
+  image: alpine:latest
+  before_script:
+    - apk add --no-cache curl
+  script:
+    - echo "Deploying to production environment..."
+    - curl -X POST $PRODUCTION_WEBHOOK_URL \
+        -H "Content-Type: application/json" \
+        -d "{\"image\": \"$DOCKER_IMAGE:$CI_COMMIT_SHA\"}"
+    - echo "Waiting for deployment to complete..."
+    - sleep 60
+    - echo "Running health checks..."
+    - curl -f $PRODUCTION_HEALTH_CHECK_URL || exit 1
+  environment:
+    name: production
+    url: $PRODUCTION_URL
+  dependencies:
+    - build
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+  when: manual
+
+notify:slack:
+  stage: .post
+  image: alpine:latest
+  before_script:
+    - apk add --no-cache curl
+  script:
+    - |
+      if [ "$CI_JOB_STATUS" == "success" ]; then
+        EMOJI="✅"
+        COLOR="good"
+      else
+        EMOJI="❌"
+        COLOR="danger"
+      fi
+      
+      curl -X POST $SLACK_WEBHOOK_URL \
+        -H "Content-Type: application/json" \
+        -d "{\"attachments\": [{\"color\": \"$COLOR\",\"title\": \"$EMOJI Pipeline $CI_JOB_STATUS\",\"text\": \"Repository: $CI_PROJECT_NAME\nBranch: $CI_COMMIT_REF_NAME\nCommit: $CI_COMMIT_SHORT_SHA\",\"fields\": [{\"title\": \"Pipeline URL\",\"value\": \"$CI_PIPELINE_URL\",\"short\": true}]}]}"
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH 

@@ -4,6 +4,7 @@ import { join, dirname, resolve } from 'path';
 export interface GeneratorOptions {
   usePowertoolsLogger: boolean;
   useWallyAudit: boolean;
+  customPath?: string;
 }
 
 export abstract class ArchitectureGenerator {
@@ -16,8 +17,16 @@ export abstract class ArchitectureGenerator {
 
   async generate(projectName: string, options?: GeneratorOptions): Promise<void> {
     this.projectName = projectName;
-    this.projectPath = resolve(projectName);
     this.options = options || this.options;
+    
+    // Determinar la ruta del proyecto
+    if (this.options.customPath) {
+      // Convertir path de Git Bash a Windows si es necesario
+      const normalizedPath = this.normalizePath(this.options.customPath);
+      this.projectPath = resolve(normalizedPath, projectName);
+    } else {
+      this.projectPath = resolve(projectName);
+    }
     
     // Crear directorio del proyecto
     await mkdir(this.projectPath, { recursive: true });
@@ -286,5 +295,24 @@ export default Logger;
   location: 'lambda'
 };
 `;
+  }
+
+  /**
+   * Normaliza paths de Git Bash a Windows
+   * Convierte /c/Users/... a C:\Users\...
+   */
+  private normalizePath(inputPath: string): string {
+    // Verificar si el path es de Git Bash (formato /letra/)
+    const gitBashPathRegex = /^\/([a-zA-Z])\//;
+    const match = inputPath.match(gitBashPathRegex);
+    
+    if (match) {
+      const driveLetter = match[1].toUpperCase();
+      // Convertir /c/Users/... a C:\Users\...
+      return inputPath.replace(`/${match[1]}/`, `${driveLetter}:\\`).replace(/\//g, '\\');
+    }
+    
+    // Si no coincide con ningún patrón, devolver el path original
+    return inputPath;
   }
 }

@@ -12,20 +12,53 @@ Una herramienta CLI en TypeScript para generar skeletons de proyectos con difere
 
 ## 🚀 Instalación
 
+### Instalación Global
 ```bash
 npm install -g cli-builder-arch
 ```
 
+### Instalación Local
+```bash
+npm install cli-builder-arch
+npx cli-builder create
+```
+
 ## 📖 Uso
 
+### Comando Básico
 ```bash
 cli-builder create
 ```
 
-El CLI te guiará a través de:
-1. Selección de la arquitectura deseada
-2. Nombre del proyecto
-3. Generación automática de la estructura
+### Flujo de Configuración
+El CLI te guiará a través de un proceso interactivo:
+
+1. **Selección de Arquitectura**: Elige entre las 5 arquitecturas disponibles
+2. **Nombre del Proyecto**: Especifica el nombre de tu proyecto (solo letras, números, guiones y guiones bajos)
+3. **Path Personalizado**: Opcionalmente especifica una ruta personalizada donde crear el proyecto
+4. **Logger de Powertools**: Decide si incluir el logger de AWS Lambda Powertools
+5. **Auditoría de Wally**: Decide si incluir las constantes de auditoría de Wally
+6. **Generación**: El CLI genera automáticamente toda la estructura del proyecto
+
+### Ejemplo de Uso Completo
+```bash
+$ cli-builder create
+
+🏗️  Generador de Arquitecturas CLI
+
+? ¿Qué arquitectura quieres usar? 🏛️  Layered Architecture (Arquitectura en Capas)
+? ¿Cuál es el nombre de tu proyecto? mi-proyecto-lambda
+? ¿Desea especificar un path personalizado para crear el proyecto? No
+? ¿Desea agregar el logger de powertools? Yes
+? ¿Desea agregar la auditoria de Wally? Yes
+
+📁 Generando proyecto "mi-proyecto-lambda" con layered...
+
+✅ ¡Proyecto generado exitosamente!
+
+📂 Ubicación: ./mi-proyecto-lambda
+🚀 Para empezar: cd mi-proyecto-lambda && npm install
+```
 
 ## 🏛️ Layered Architecture
 
@@ -123,17 +156,28 @@ npm start
 
 ## 📝 Características
 
-- ✅ Generación automática de estructura de carpetas
-- ✅ Archivos de ejemplo con prefijo "example"
-- ✅ Configuración TypeScript incluida
-- ✅ Configuración Webpack para optimización de lambdas
-- ✅ Package.json con dependencias de AWS Lambda
-- ✅ Tests de ejemplo con Jest
-- ✅ Documentación README generada
-- ✅ Configuración de Git incluida
-- ✅ Enfoque específico para desarrollo de lambdas de AWS
-- ✅ 5 arquitecturas diferentes disponibles
-- ✅ Estructuras optimizadas para cada arquitectura
+### 🎯 Funcionalidades Principales
+- ✅ **Generación automática** de estructura de carpetas según la arquitectura seleccionada
+- ✅ **Archivos de ejemplo** con prefijo "example" para cada tipo de archivo
+- ✅ **Configuración TypeScript** optimizada para AWS Lambda
+- ✅ **Configuración Webpack** para optimización y empaquetado de lambdas
+- ✅ **Package.json** con dependencias específicas de AWS Lambda
+- ✅ **Tests de ejemplo** con Jest configurado
+- ✅ **Documentación README** generada automáticamente
+- ✅ **Configuración de Git** incluida (.gitignore)
+- ✅ **Path personalizado** opcional para crear proyectos en ubicaciones específicas
+
+### 🏗️ Arquitecturas Disponibles
+- ✅ **5 arquitecturas diferentes** disponibles
+- ✅ **Estructuras optimizadas** para cada arquitectura
+- ✅ **Enfoque específico** para desarrollo de lambdas de AWS
+- ✅ **Mejores prácticas** implementadas en cada estructura
+
+### 🔧 Herramientas Incluidas
+- ✅ **Logger de Powertools** (opcional) para logging estructurado
+- ✅ **Auditoría de Wally** (opcional) para constantes de auditoría
+- ✅ **Scripts de build** optimizados para producción
+- ✅ **Script de empaquetado** para AWS Lambda
 
 ## 📦 Package for Lambda
 
@@ -144,6 +188,36 @@ npm run package
 \`\`\`
 
 Este comando genera un archivo ZIP optimizado para desplegar en AWS Lambda.
+
+## ❓ Preguntas Frecuentes
+
+### ¿Puedo especificar una ruta personalizada para crear mi proyecto?
+Sí, durante el proceso de configuración se te preguntará si deseas especificar un path personalizado. Si seleccionas "Sí", podrás ingresar la ruta completa donde quieres que se cree el proyecto.
+
+### ¿Qué dependencias se incluyen por defecto?
+Cada proyecto incluye las dependencias básicas de AWS Lambda (`aws-sdk`, `aws-lambda`). Opcionalmente puedes incluir:
+- `@aws-lambda-powertools/logger` y `@aws-lambda-powertools/tracer` para logging
+- `@wallytech/sdk-audit` para auditoría
+
+### ¿Cómo puedo personalizar la estructura generada?
+La estructura base se genera automáticamente, pero puedes modificar los archivos después de la generación. Los archivos de ejemplo te servirán como guía para implementar tu lógica de negocio.
+
+### ¿El CLI funciona en Windows, Mac y Linux?
+Sí, el CLI está desarrollado en Node.js y funciona en todas las plataformas soportadas por Node.js.
+
+## 🔧 Troubleshooting
+
+### Error: "El nombre del proyecto no puede estar vacío"
+Asegúrate de ingresar un nombre válido que contenga solo letras, números, guiones y guiones bajos.
+
+### Error: "Arquitectura no soportada"
+Verifica que estés seleccionando una de las 5 arquitecturas disponibles en el menú.
+
+### Error al crear el proyecto en una ruta personalizada
+Asegúrate de que la ruta especificada existe y tienes permisos de escritura en esa ubicación.
+
+### Error de permisos en npm install
+Si tienes problemas con permisos, intenta usar `sudo` en sistemas Unix o ejecuta tu terminal como administrador en Windows.
 
 ## 🤝 Contribuir
 

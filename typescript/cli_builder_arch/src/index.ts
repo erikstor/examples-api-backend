@@ -58,6 +58,35 @@ program
         }
       ]);
 
+      // Preguntar si desea especificar un path personalizado
+      const { useCustomPath } = await inquirer.prompt([
+        {
+          type: 'confirm',
+          name: 'useCustomPath',
+          message: '¿Desea especificar un path personalizado para crear el proyecto?',
+          default: false
+        }
+      ]);
+
+      // Si se selecciona path personalizado, preguntar por la ruta
+      let customPath = '';
+      if (useCustomPath) {
+        const { projectPath } = await inquirer.prompt([
+          {
+            type: 'input',
+            name: 'projectPath',
+            message: 'Ingrese la ruta completa donde desea crear el proyecto:',
+            validate: (input: string) => {
+              if (!input.trim()) {
+                return 'La ruta no puede estar vacía';
+              }
+              return true;
+            }
+          }
+        ]);
+        customPath = projectPath.trim();
+      }
+
       // Preguntar por el logger de powertools
       const { usePowertoolsLogger } = await inquirer.prompt([
         {
@@ -103,11 +132,13 @@ program
 
       console.log(chalk.yellow(`\n📁 Generando proyecto "${projectName}" con ${architecture}...\n`));
       
-      await generator.generate(projectName, { usePowertoolsLogger, useWallyAudit });
+      await generator.generate(projectName, { usePowertoolsLogger, useWallyAudit, customPath });
+      
+      const projectLocation = customPath ? `${customPath}/${projectName}` : `./${projectName}`;
       
       console.log(chalk.green.bold('\n✅ ¡Proyecto generado exitosamente!\n'));
-      console.log(chalk.cyan(`📂 Ubicación: ./${projectName}`));
-      console.log(chalk.cyan(`🚀 Para empezar: cd ${projectName} && npm install`));
+      console.log(chalk.cyan(`📂 Ubicación: ${projectLocation}`));
+      console.log(chalk.cyan(`🚀 Para empezar: cd ${projectLocation} && npm install`));
       
     } catch (error) {
       console.error(chalk.red.bold('\n❌ Error:'), error);

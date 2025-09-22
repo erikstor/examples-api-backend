@@ -15,7 +15,9 @@ async function testCLI() {
   const input = [
     '1', // Seleccionar Layered Architecture
     'test-layered-project', // Nombre del proyecto
-    '\n' // Enter para confirmar
+    '\n', // Enter para confirmar
+    '\n', // Enter para confirmar
+    '\n', // Enter para confirmar
   ].join('\n');
 
   return new Promise((resolve, reject) => {

@@ -1,0 +1,49 @@
+{
+  "name": "cli-builder-arch",
+  "version": "1.0.0",
+  "description": "CLI para generar skeletons de proyectos con diferentes arquitecturas",
+  "main": "dist/index.js",
+  "bin": {
+    "cli-builder": "dist/index.js"
+  },
+  "scripts": {
+    "build": "node scripts/build.js",
+    "build:tsc": "tsc",
+    "dev": "ts-node src/index.ts",
+    "start": "node dist/index.js",
+    "test": "node example-usage.js",
+    "prepare": "npm run build"
+  },
+  "keywords": [
+    "cli",
+    "architecture",
+    "typescript",
+    "clean-architecture",
+    "hexagonal-architecture",
+    "layered-architecture"
+  ],
+  "author": "Tu nombre",
+  "license": "MIT",
+  "dependencies": {
+    "commander": "^11.1.0",
+    "inquirer": "^9.2.12",
+    "chalk": "^4.1.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.8.0",
+    "@types/inquirer": "^9.0.7",
+    "typescript": "^5.2.2",
+    "ts-node": "^10.9.1",
+    "webpack": "^5.89.0",
+    "webpack-cli": "^5.1.4",
+    "ts-loader": "^9.5.1"
+  },
+  "peerDependencies": {
+    "@aws-lambda-powertools/logger": "^1.15.0",
+    "@aws-lambda-powertools/tracer": "^1.15.0",
+    "@wallytech/sdk-audit": "^1.0.0"
+  },
+  "files": [
+    "dist/**/*"
+  ]
+}

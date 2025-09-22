@@ -61,10 +61,7 @@ export abstract class ArchitectureGenerator {
       await this.createFile('src/utils/Logger.ts', this.getLoggerClass());
     }
 
-    // Audit constants si está habilitado
-    if (this.options.useWallyAudit) {
-      await this.createFile('src/constants/audit.constants.ts', this.getAuditConstants());
-    }
+    // Audit constants si está habilitado - se maneja en cada generador específico
   }
 
   protected async createFile(filePath: string, content: string): Promise<void> {

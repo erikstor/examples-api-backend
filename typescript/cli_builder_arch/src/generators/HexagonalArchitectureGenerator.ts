@@ -40,11 +40,23 @@ export class HexagonalArchitectureGenerator extends ArchitectureGenerator {
     // Utils Layer
     await this.createFile('src/utils/example.util.ts', this.getUtil());
 
+    // Audit constants si está habilitado
+    if (this.options.useWallyAudit) {
+      await this.createFile('src/domain/common/consts/audit.constants.ts', this.getAuditConstants());
+    }
+
     // Main application file
     await this.createFile('src/index.ts', this.getMainFile());
 
     // Test file
     await this.createFile('test/example.test.ts', this.getTestFile());
+  }
+
+  protected getAuditConstants(): string {
+    return `export const AUDIT_OVERRIDES = {
+  location: 'lambda'
+};
+`;
   }
 
   private getModel(): string {

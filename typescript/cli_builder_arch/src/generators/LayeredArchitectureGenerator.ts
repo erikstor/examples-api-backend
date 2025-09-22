@@ -25,11 +25,23 @@ export class LayeredArchitectureGenerator extends ArchitectureGenerator {
     await this.createFile('src/utils/example.interface.ts', this.getInterface());
     await this.createFile('src/utils/example.exception.ts', this.getException());
 
+    // Audit constants si está habilitado
+    if (this.options.useWallyAudit) {
+      await this.createFile('src/utils/constants/audit.constants.ts', this.getAuditConstants());
+    }
+
     // Main application file
     await this.createFile('src/index.ts', this.getMainFile());
 
     // Test file
     await this.createFile('test/example.test.ts', this.getTestFile());
+  }
+
+  protected getAuditConstants(): string {
+    return `export const AUDIT_OVERRIDES = {
+  location: 'lambda'
+};
+`;
   }
 
   private getController(): string {

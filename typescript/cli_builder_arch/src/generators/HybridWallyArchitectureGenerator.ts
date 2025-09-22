@@ -32,11 +32,23 @@ export class HybridWallyArchitectureGenerator extends ArchitectureGenerator {
     await this.createFile('src/utils/example.constant.ts', this.getConstant());
     await this.createFile('src/utils/example.error.ts', this.getError());
 
+    // Audit constants si está habilitado
+    if (this.options.useWallyAudit) {
+      await this.createFile('src/utils/constants/audit.constants.ts', this.getAuditConstants());
+    }
+
     // Main application file
     await this.createFile('src/index.ts', this.getMainFile());
 
     // Test file
     await this.createFile('test/example.test.ts', this.getTestFile());
+  }
+
+  protected getAuditConstants(): string {
+    return `export const AUDIT_OVERRIDES = {
+  location: 'lambda'
+};
+`;
   }
 
   private getAdapter(): string {

@@ -57,7 +57,7 @@ export abstract class ArchitectureGenerator {
     await this.createFile('webpack.config.js', this.getWebpackConfig());
 
     // Logger class si está habilitado
-    if (this.options.usePowertoolsLogger) {
+    if (this.options.usePowertoolsLogger && this.constructor.name !== 'AWSHexagonalArchitectureGenerator') {
       await this.createFile('src/utils/Logger.ts', this.getLoggerClass());
     }
 
@@ -90,6 +90,18 @@ export abstract class ArchitectureGenerator {
       dependencies.push('"@wallytech/sdk-audit": "^1.0.0"');
     }
 
+    // Dependencias para validación y transformación
+    dependencies.push('"class-validator": "^0.14.0"');
+    dependencies.push('"class-transformer": "^0.5.1"');
+    dependencies.push('"reflect-metadata": "^0.1.13"');
+    
+    // Dependencias para AWS X-Ray
+    dependencies.push('"aws-xray-sdk": "^3.5.0"');
+    
+    // Dependencias para AWS SDK v3
+    dependencies.push('"@aws-sdk/client-dynamodb": "^3.894.0"');
+    dependencies.push('"@aws-sdk/lib-dynamodb": "^3.894.0"');
+
     return `{
   "name": "${this.projectName}",
   "version": "1.0.0",
@@ -101,7 +113,8 @@ export abstract class ArchitectureGenerator {
     "dev": "ts-node src/index.ts",
     "start": "node dist/index.js",
     "test": "jest",
-    "package": "npm run build && zip -r ${this.projectName}.zip dist/"
+    "package": "npm run build && zip -r ${this.projectName}.zip dist/",
+    "deploy": "cd ../cdk && cdk deploy && sh uploadLambda.sh [nombre-carpeta] [nombre-lambda]"
   },
   "dependencies": {
     ${dependencies.join(',\n    ')}
@@ -115,7 +128,8 @@ export abstract class ArchitectureGenerator {
     "webpack-cli": "^5.1.4",
     "ts-loader": "^9.5.1",
     "jest": "^29.7.0",
-    "@types/jest": "^29.5.5"
+    "@types/jest": "^29.5.5",
+    "ts-jest": "^29.1.1"
   }
 }`;
   }
@@ -127,7 +141,6 @@ export abstract class ArchitectureGenerator {
     "module": "commonjs",
     "lib": ["ES2020"],
     "outDir": "./dist",
-    "rootDir": "./src",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
@@ -135,15 +148,12 @@ export abstract class ArchitectureGenerator {
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true
   },
-  "include": [
-    "src/**/*"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist"
-  ]
+  "include": ["src/**/*", "test/**/*"],
+  "exclude": ["node_modules", "dist"]
 }`;
   }
 

@@ -49,6 +49,7 @@ export class CleanArchitectureGenerator extends ArchitectureGenerator {
 
     // Test file
     await this.createFile('test/example.test.ts', this.getTestFile());
+    await this.createFile('jest.config.js', this.getJestConfig());
   }
 
   protected getAuditConstants(): string {
@@ -574,4 +575,25 @@ if (require.main === module) {
 `;
   }
 
+  private getJestConfig(): string {
+    return `module.exports = {
+  preset: 'ts-jest',
+  testEnvironment: 'node',
+  testMatch: ['**/test/**/*.test.ts'],
+  collectCoverageFrom: [
+    'src/**/*.ts',
+    '!src/app.ts'
+  ],
+  coverageDirectory: 'coverage',
+  coverageReporters: ['text', 'lcov'],
+  moduleNameMapper: {
+    '^@/(.*)$': '<rootDir>/src/$1'
+  },
+  transform: {
+    '^.+\.ts$': ['ts-jest', {
+      tsconfig: 'tsconfig.test.json'
+    }]
+  },  
+}; `;
+  }
 }

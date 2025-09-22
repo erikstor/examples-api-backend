@@ -8,9 +8,7 @@ export class AWSHexagonalArchitectureGenerator extends ArchitectureGenerator {
     await this.createDirectory('src/adapters/service');
     await this.createDirectory('src/domain');
     await this.createDirectory('src/domain/commands');
-    await this.createDirectory('src/domain/commands/recharge');
     await this.createDirectory('src/domain/command_handlers');
-    await this.createDirectory('src/domain/command_handlers/recharge');
     await this.createDirectory('src/domain/common');
     await this.createDirectory('src/domain/common/consts');
     await this.createDirectory('src/domain/exceptions');
@@ -30,40 +28,26 @@ export class AWSHexagonalArchitectureGenerator extends ArchitectureGenerator {
     await this.createDirectory('test');
 
     // Domain files
-    await this.createFile('src/domain/model/Customer.ts', this.getCustomerModel());
-    await this.createFile('src/domain/model/Transaction.ts', this.getTransactionModel());
-    await this.createFile('src/domain/model/CyberSourceRequestBuilder.ts', this.getCyberSourceRequestBuilder());
-    await this.createFile('src/domain/model/interfaces/ICustomer.ts', this.getICustomerInterface());
-    await this.createFile('src/domain/model/interfaces/ICyberSource.ts', this.getICyberSourceInterface());
+    await this.createFile('src/domain/model/ExampleModel.ts', this.getExampleModel());
+    await this.createFile('src/domain/model/interfaces/IExample.ts', this.getIExampleInterface());
     await this.createFile('src/domain/model/interfaces/IResponse.ts', this.getIResponseInterface());
     await this.createFile('src/domain/model/interfaces/ITransfer.ts', this.getITransferInterface());
-    await this.createFile('src/domain/ports/IAwsSecretRepository.ts', this.getIAwsSecretRepositoryPort());
+    await this.createFile('src/domain/ports/IAwsSecretService.ts', this.getIAwsSecretServicePort());
     await this.createFile('src/domain/ports/ICustomerRepository.ts', this.getICustomerRepositoryPort());
-    await this.createFile('src/domain/ports/IPaymentService.ts', this.getIPaymentServicePort());
-    await this.createFile('src/domain/ports/ITransactionRepository.ts', this.getITransactionRepositoryPort());
     await this.createFile('src/domain/commands/GetCustomerCommand.ts', this.getGetCustomerCommand());
-    await this.createFile('src/domain/commands/PaymentCommand.ts', this.getPaymentCommand());
-    await this.createFile('src/domain/commands/recharge/GetTransactionCommand.ts', this.getGetTransactionCommand());
-    await this.createFile('src/domain/commands/recharge/UpdateTransactionCommand.ts', this.getUpdateTransactionCommand());
     await this.createFile('src/domain/command_handlers/GetCustomerCommandHandler.ts', this.getGetCustomerCommandHandler());
-    await this.createFile('src/domain/command_handlers/PaymentCyberSourceCommandHandler.ts', this.getPaymentCyberSourceCommandHandler());
-    await this.createFile('src/domain/command_handlers/recharge/GetTransactionCommandHandler.ts', this.getGetTransactionCommandHandler());
-    await this.createFile('src/domain/command_handlers/recharge/UpdateTransactionCommandHandler.ts', this.getUpdateTransactionCommandHandler());
     await this.createFile('src/domain/exceptions/core/BaseException.ts', this.getBaseException());
     await this.createFile('src/domain/exceptions/core/AwsSecretManagerException.ts', this.getAwsSecretManagerException());
     await this.createFile('src/domain/exceptions/core/InvalidDataException.ts', this.getInvalidDataException());
     await this.createFile('src/domain/exceptions/core/NotFoundException.ts', this.getNotFoundException());
     await this.createFile('src/domain/exceptions/core/SystemException.ts', this.getSystemException());
     await this.createFile('src/domain/exceptions/constants/ErrorMessages.ts', this.getErrorMessages());
-    await this.createFile('src/domain/exceptions/constants/CyberSourceRequestBuilderExceptions.ts', this.getCyberSourceRequestBuilderExceptions());
     await this.createFile('src/domain/exceptions/constants/InputMessageException.ts', this.getInputMessageException());
-    await this.createFile('src/domain/exceptions/CustomerException.ts', this.getCustomerException());
-    await this.createFile('src/domain/exceptions/CyberSourceException.ts', this.getCyberSourceException());
-    await this.createFile('src/domain/exceptions/TransactionException.ts', this.getTransactionException());
+    await this.createFile('src/domain/exceptions/ExampleCustomException.ts', this.getExampleCustomException());
     await this.createFile('src/domain/common/consts/Setup.ts', this.getSetup());
     await this.createFile('src/domain/common/consts/SuccessMessages.ts', this.getSuccessMessages());
     await this.createFile('src/domain/common/SuccessResponse.ts', this.getSuccessResponse());
-    await this.createFile('src/domain/events/RechargeEvent.ts', this.getRechargeEvent());
+    await this.createFile('src/domain/events/ExampleEvent.ts', this.getExampleEvent());
 
     // Audit constants si está habilitado
     if (this.options.useWallyAudit) {
@@ -72,13 +56,11 @@ export class AWSHexagonalArchitectureGenerator extends ArchitectureGenerator {
 
     // Adapters files
     await this.createFile('src/adapters/repository/DynamoCustomerRepository.ts', this.getDynamoCustomerRepository());
-    await this.createFile('src/adapters/repository/DynamoTransactionRepository.ts', this.getDynamoTransactionRepository());
     await this.createFile('src/adapters/service/AwsSecretService.ts', this.getAwsSecretService());
-    await this.createFile('src/adapters/service/CyberSourcePaymentService.ts', this.getCyberSourcePaymentService());
 
     // Entrypoints files
-    await this.createFile('src/entrypoints/api/RechargeController.ts', this.getRechargeController());
-    await this.createFile('src/entrypoints/api/model/InputRecharge.ts', this.getInputRecharge());
+    await this.createFile('src/entrypoints/api/ExampleController.ts', this.getExampleController());
+    await this.createFile('src/entrypoints/api/model/InputExample.ts', this.getInputExample());
 
     // Infrastructure files
     await this.createFile('src/infra/interfaces/IAudit.ts', this.getIAuditInterface());
@@ -88,19 +70,16 @@ export class AWSHexagonalArchitectureGenerator extends ArchitectureGenerator {
 
     // Utils and types
     await this.createFile('src/utils/ErrorExtractor.ts', this.getErrorExtractor());
-    await this.createFile('src/utils/formatExpirationMonth.ts', this.getFormatExpirationMonth());
-    await this.createFile('src/utils/GetCardProvider.ts', this.getGetCardProvider());
-    await this.createFile('src/utils/WarmupHandler.ts', this.getWarmupHandler());
-    await this.createFile('src/types/cybersource-rest-client.d.ts', this.getCyberSourceTypes());
 
     // Main application file
     await this.createFile('src/index.ts', this.getMainFile());
 
     // Test file
     await this.createFile('test/example.test.ts', this.getTestFile());
+    await this.createFile('jest.config.js', this.getJestConfig());
   }
 
-  private getCustomerModel(): string {
+  private getExampleModel(): string {
     return `export interface Customer {
   id: string;
   name: string;
@@ -150,125 +129,20 @@ export class CustomerImpl implements Customer {
 }`;
   }
 
-  private getTransactionModel(): string {
-    return `export interface Transaction {
-  id: string;
-  customerId: string;
-  amount: number;
-  currency: string;
-  status: 'pending' | 'completed' | 'failed' | 'cancelled';
-  paymentMethod: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-export class TransactionImpl implements Transaction {
-  constructor(
-    public readonly id: string,
-    public readonly customerId: string,
-    public readonly amount: number,
-    public readonly currency: string,
-    public readonly status: 'pending' | 'completed' | 'failed' | 'cancelled',
-    public readonly paymentMethod: string,
-    public readonly createdAt: Date = new Date(),
-    public readonly updatedAt: Date = new Date()
-  ) {}
-
-  // Domain methods
-  updateStatus(newStatus: 'pending' | 'completed' | 'failed' | 'cancelled'): TransactionImpl {
-    return new TransactionImpl(
-      this.id,
-      this.customerId,
-      this.amount,
-      this.currency,
-      newStatus,
-      this.paymentMethod,
-      this.createdAt,
-      new Date()
-    );
-  }
-
-  // Business rules
-  isValid(): boolean {
-    return this.amount > 0 && this.customerId.length > 0;
-  }
-}`;
-  }
-
-  private getCyberSourceRequestBuilder(): string {
-    return `export class CyberSourceRequestBuilder {
-  private request: any = {};
-
-  setMerchantId(merchantId: string): this {
-    this.request.merchantId = merchantId;
-    return this;
-  }
-
-  setAmount(amount: number): this {
-    this.request.amount = amount;
-    return this;
-  }
-
-  setCurrency(currency: string): this {
-    this.request.currency = currency;
-    return this;
-  }
-
-  setCardData(cardData: any): this {
-    this.request.cardData = cardData;
-    return this;
-  }
-
-  build(): any {
-    return this.request;
-  }
-}`;
-  }
 
 
-  private getICustomerInterface(): string {
-    return `export interface ICustomer {
+
+  private getIExampleInterface(): string {
+    return `export interface IExample {
   id: string;
   name: string;
   email: string;
   phone?: string;
   createdAt: Date;
   updatedAt: Date;
-}
-
-export interface CreateCustomerModel {
-  name: string;
-  email: string;
-  phone?: string;
-}
-
-export interface UpdateCustomerModel {
-  name?: string;
-  email?: string;
-  phone?: string;
 }`;
   }
 
-  private getICyberSourceInterface(): string {
-    return `export interface ICyberSource {
-  merchantId: string;
-  amount: number;
-  currency: string;
-  cardData: {
-    number: string;
-    expirationMonth: string;
-    expirationYear: string;
-    securityCode: string;
-  };
-}
-
-export interface CyberSourceResponse {
-  status: string;
-  reasonCode: number;
-  message: string;
-  data?: any;
-}`;
-  }
 
   private getIResponseInterface(): string {
     return `import { APIGatewayProxyResult } from "aws-lambda";
@@ -291,15 +165,15 @@ export interface IResponse {
 }`;
   }
 
-  private getIAwsSecretRepositoryPort(): string {
-    return `export interface IAwsSecretRepository {
+  private getIAwsSecretServicePort(): string {
+    return `export interface IAwsSecretService {
   getSecret(secretName: string): Promise<string>;
   getSecretValue(secretName: string, key: string): Promise<string>;
 }`;
   }
 
   private getICustomerRepositoryPort(): string {
-    return `import { Customer } from '../model/Customer';
+    return `import { Customer } from '../model/ExampleModel';
 
 export interface ICustomerRepository {
   findById(id: string): Promise<Customer | null>;
@@ -311,69 +185,29 @@ export interface ICustomerRepository {
 }`;
   }
 
-  private getIPaymentServicePort(): string {
-    return `import { ICyberSource } from '../model/interfaces/ICyberSource';
 
-export interface IPaymentService {
-  processPayment(paymentData: ICyberSource): Promise<any>;
-  validatePayment(paymentData: ICyberSource): Promise<boolean>;
-  refundPayment(transactionId: string, amount: number): Promise<any>;
-}`;
-  }
-
-  private getITransactionRepositoryPort(): string {
-    return `import { Transaction } from '../model/Transaction';
-
-export interface ITransactionRepository {
-  findById(id: string): Promise<Transaction | null>;
-  findByCustomerId(customerId: string): Promise<Transaction[]>;
-  save(transaction: Transaction): Promise<Transaction>;
-  update(transaction: Transaction): Promise<Transaction>;
-  delete(id: string): Promise<void>;
-  exists(id: string): Promise<boolean>;
-}`;
-  }
 
   private getGetCustomerCommand(): string {
-    return `export class GetCustomerCommand {
+    return `
+
+/**
+ * Los comandos son las entradas de la aplicación, es decir, que reciben los datos de la aplicación y los procesan. 
+ * Para darle el formato necesario para que el handler pueda procesarlos.
+ */ 
+export class GetCustomerCommand {
   constructor(
     public readonly customerId: string
   ) {}
 }`;
   }
 
-  private getPaymentCommand(): string {
-    return `export class PaymentCommand {
-  constructor(
-    public readonly customerId: string,
-    public readonly amount: number,
-    public readonly currency: string,
-    public readonly cardData: any
-  ) {}
-}`;
-  }
 
-  private getGetTransactionCommand(): string {
-    return `export class GetTransactionCommand {
-  constructor(
-    public readonly transactionId: string
-  ) {}
-}`;
-  }
 
-  private getUpdateTransactionCommand(): string {
-    return `export class UpdateTransactionCommand {
-  constructor(
-    public readonly transactionId: string,
-    public readonly status: 'pending' | 'completed' | 'failed' | 'cancelled'
-  ) {}
-}`;
-  }
 
   private getGetCustomerCommandHandler(): string {
     return `import { GetCustomerCommand } from '../commands/GetCustomerCommand';
 import { ICustomerRepository } from '../ports/ICustomerRepository';
-import { Customer } from '../model/Customer';
+import { Customer } from '../model/ExampleModel';
 
 export class GetCustomerCommandHandler {
   constructor(private readonly customerRepository: ICustomerRepository) {}
@@ -384,98 +218,8 @@ export class GetCustomerCommandHandler {
 }`;
   }
 
-  private getPaymentCyberSourceCommandHandler(): string {
-    return `import { PaymentCommand } from '../commands/PaymentCommand';
-import { IPaymentService } from '../ports/IPaymentService';
-import { ITransactionRepository } from '../ports/ITransactionRepository';
-import { Transaction, TransactionImpl } from '../model/Transaction';
 
-export class PaymentCyberSourceCommandHandler {
-  constructor(
-    private readonly paymentService: IPaymentService,
-    private readonly transactionRepository: ITransactionRepository
-  ) {}
 
-  async handle(command: PaymentCommand): Promise<Transaction> {
-    // Validate payment data
-    const isValid = await this.paymentService.validatePayment({
-      merchantId: 'default-merchant',
-      amount: command.amount,
-      currency: command.currency,
-      cardData: command.cardData
-    });
-
-    if (!isValid) {
-      throw new Error('Invalid payment data');
-    }
-
-    // Process payment
-    const paymentResult = await this.paymentService.processPayment({
-      merchantId: 'default-merchant',
-      amount: command.amount,
-      currency: command.currency,
-      cardData: command.cardData
-    });
-
-    // Create transaction
-    const transaction = new TransactionImpl(
-      this.generateId(),
-      command.customerId,
-      command.amount,
-      command.currency,
-      paymentResult.status === 'success' ? 'completed' : 'failed',
-      'cybersource',
-      new Date(),
-      new Date()
-    );
-
-    return await this.transactionRepository.save(transaction);
-  }
-
-  private generateId(): string {
-    return Math.random().toString(36).substr(2, 9);
-  }
-}`;
-  }
-
-  private getGetTransactionCommandHandler(): string {
-    return `import { GetTransactionCommand } from '../commands/recharge/GetTransactionCommand';
-import { ITransactionRepository } from '../ports/ITransactionRepository';
-import { Transaction } from '../model/Transaction';
-
-export class GetTransactionCommandHandler {
-  constructor(private readonly transactionRepository: ITransactionRepository) {}
-
-  async handle(command: GetTransactionCommand): Promise<Transaction | null> {
-    return await this.transactionRepository.findById(command.transactionId);
-  }
-}`;
-  }
-
-  private getUpdateTransactionCommandHandler(): string {
-    return `import { UpdateTransactionCommand } from '../commands/recharge/UpdateTransactionCommand';
-import { ITransactionRepository } from '../ports/ITransactionRepository';
-import { Transaction } from '../model/Transaction';
-
-export class UpdateTransactionCommandHandler {
-  constructor(private readonly transactionRepository: ITransactionRepository) {}
-
-  async handle(command: UpdateTransactionCommand): Promise<Transaction | null> {
-    const existing = await this.transactionRepository.findById(command.transactionId);
-    if (!existing) {
-      return null;
-    }
-
-    const updatedTransaction = {
-      ...existing,
-      status: command.status,
-      updatedAt: new Date()
-    };
-
-    return await this.transactionRepository.update(updatedTransaction);
-  }
-}`;
-  }
 
   private getBaseException(): string {
     return `import { APIGatewayProxyResult } from "aws-lambda";
@@ -608,15 +352,6 @@ export type ErrorCodeKey = keyof typeof ERROR_CODES;
 `;
   }
 
-  private getCyberSourceRequestBuilderExceptions(): string {
-    return `export const CYBERSOURCE_REQUEST_BUILDER_EXCEPTIONS = {
-  INVALID_MERCHANT_ID: 'Merchant ID is required',
-  INVALID_AMOUNT: 'Amount must be greater than 0',
-  INVALID_CURRENCY: 'Currency is required',
-  INVALID_CARD_DATA: 'Card data is required'
-} as const;
-`;
-  }
 
   private getInputMessageException(): string {
     return `export const INPUT_MESSAGE_EXCEPTIONS = {
@@ -627,41 +362,19 @@ export type ErrorCodeKey = keyof typeof ERROR_CODES;
 `;
   }
 
-  private getCustomerException(): string {
+  private getExampleCustomException(): string {
     return `import { BaseException } from './core/BaseException';
 import { ERROR_CODES, HTTP_STATUS_CODES } from './constants/ErrorMessages';
 
-export class CustomerException extends BaseException {
+export class ExampleCustomException extends BaseException {
   constructor(message: string) {
     super(message, ERROR_CODES.VALIDATION_ERROR, HTTP_STATUS_CODES.BAD_REQUEST);
-    this.name = 'CustomerException';
+    this.name = 'ExampleCustomException';
   }
 }`;
   }
 
-  private getCyberSourceException(): string {
-    return `import { BaseException } from './core/BaseException';
-import { ERROR_CODES, HTTP_STATUS_CODES } from './constants/ErrorMessages';
 
-export class CyberSourceException extends BaseException {
-  constructor(message: string) {
-    super(message, ERROR_CODES.INTERNAL_ERROR, HTTP_STATUS_CODES.BAD_GATEWAY);
-    this.name = 'CyberSourceException';
-  }
-}`;
-  }
-
-  private getTransactionException(): string {
-    return `import { BaseException } from './core/BaseException';
-import { ERROR_CODES, HTTP_STATUS_CODES } from './constants/ErrorMessages';
-
-export class TransactionException extends BaseException {
-  constructor(message: string) {
-    super(message, ERROR_CODES.VALIDATION_ERROR, HTTP_STATUS_CODES.BAD_REQUEST);
-    this.name = 'TransactionException';
-  }
-}`;
-  }
 
   private getSetup(): string {
     return `export const Setup = {
@@ -676,41 +389,29 @@ export const AUDIT = {
 }
 
 
-export const TABLE_PRODUCT_GROUP = 'PRODUTCS#POCKETS'
-export const TABLE_PRODUCT_STATUS_ACTIVE = 'ACTIVE'
-
-export const CARD_TYPE = {
-  VISA: 'visa',
-  MASTERCARD: 'mastercard',
-  AMEX: 'amex',
-  DISCOVER: 'discover',
-  OTHERS: 'others'
-}`;
+`;
   }
 
   private getSuccessMessages(): string {
     return `export const SUCCESS_MESSAGES = {
   OK: "Operación exitosa",
-  RECHARGE_CONFIRMED: "Recarga confirmada exitosamente",
-  CARD_TOKENIZATION_SAVED: "Datos de tarjeta tokenizada guardados exitosamente",
-  CARD_TOKENIZATION_RECHARGE_SAVED: "Datos de tarjeta tokenizada y recarga guardados exitosamente"
+  EXAMPLE_CONFIRMED: "Ejemplo confirmado exitosamente",
 } as const
 
 
 export const SUCCESS_CODES = {
   OK: 'OK',
   CREATED: 'CREATED',
-  RECHARGE_CONFIRMED: 'RECHARGE_CONFIRMED',
 } as const;
 
 
-export const CYBERSOURCE_AUTHENTICATION_SUCCESSFUL_STATUS = "AUTHENTICATION_SUCCESSFUL"`;
+`;
   }
 
   private getSuccessResponse(): string {
     return `import { APIGatewayProxyResult } from "aws-lambda";
 
-import { HTTP_STATUS_CODES } from "../constants/ErrorMessages";
+import { HTTP_STATUS_CODES } from "../exceptions/constants/ErrorMessages";
 import { IResponse } from "../model/interfaces/IResponse";
 import { SUCCESS_CODES, SUCCESS_MESSAGES } from "./consts/SuccessMessages";
 
@@ -745,10 +446,10 @@ export class SuccessResponse implements IResponse {
 }`;
   }
 
-  private getRechargeEvent(): string {
+  private getExampleEvent(): string {
     return `import { SQS } from 'aws-sdk';
 
-export interface RechargeEvent {
+export interface ExampleEvent {
   transactionId: string;
   customerId: string;
   amount: number;
@@ -757,21 +458,21 @@ export interface RechargeEvent {
   timestamp: Date;
 }
 
-export class RechargeEventPublisher {
+export class ExampleEventPublisher {
   private sqs: SQS;
 
   constructor() {
     this.sqs = new SQS({ region: process.env.AWS_REGION || 'us-east-1' });
   }
 
-  async publishRechargeEvent(event: RechargeEvent): Promise<void> {
+  async publishExampleEvent(event: ExampleEvent): Promise<void> {
     const params = {
-      QueueUrl: process.env.RECHARGE_EVENT_QUEUE_URL || 'https://sqs.us-east-1.amazonaws.com/123456789012/recharge-events',
+      QueueUrl: process.env.EXAMPLE_EVENT_QUEUE_URL || 'https://sqs.us-east-1.amazonaws.com/123456789012/example-events',
       MessageBody: JSON.stringify(event),
       MessageAttributes: {
         eventType: {
           DataType: 'String',
-          StringValue: 'recharge'
+          StringValue: 'example'
         },
         status: {
           DataType: 'String',
@@ -782,9 +483,9 @@ export class RechargeEventPublisher {
 
     try {
       await this.sqs.sendMessage(params).promise();
-      console.log('Recharge event published successfully:', event.transactionId);
+      console.log('Example event published successfully:', event.transactionId);
     } catch (error) {
-      console.error('Error publishing recharge event:', error);
+      console.error('Error publishing example event:', error);
       throw error;
     }
   }
@@ -799,17 +500,18 @@ export class RechargeEventPublisher {
   }
 
   private getDynamoCustomerRepository(): string {
-    return `import { DynamoDB } from 'aws-sdk';
+    return `
+import { Customer } from '../../domain/model/ExampleModel';
 import { ICustomerRepository } from '../../domain/ports/ICustomerRepository';
-import { Customer } from '../../domain/model/Customer';
+import { DynamoDBClientImp } from '../../infra/Dynamodb';
+
 
 export class DynamoCustomerRepository implements ICustomerRepository {
-  private dynamoDB: DynamoDB.DocumentClient;
-  private tableName: string;
 
-  constructor() {
-    this.dynamoDB = new DynamoDB.DocumentClient();
-    this.tableName = process.env.CUSTOMERS_TABLE_NAME || 'customers';
+  constructor(
+    private readonly dynamoDB: DynamoDBClientImp = new DynamoDBClientImp(),
+    private readonly tableName: string = process.env.CUSTOMERS_TABLE_NAME || 'customers'
+  ) {
   }
 
   async findById(id: string): Promise<Customer | null> {
@@ -818,7 +520,7 @@ export class DynamoCustomerRepository implements ICustomerRepository {
       Key: { id }
     };
 
-    const result = await this.dynamoDB.get(params).promise();
+    const result = await this.dynamoDB.getItem(params.TableName, params.Key);
     return result.Item as Customer || null;
   }
 
@@ -832,7 +534,7 @@ export class DynamoCustomerRepository implements ICustomerRepository {
       }
     };
 
-    const result = await this.dynamoDB.query(params).promise();
+    const result = await this.dynamoDB.query(params.TableName, params.KeyConditionExpression, params.ExpressionAttributeValues);
     return result.Items?.[0] as Customer || null;
   }
 
@@ -842,7 +544,7 @@ export class DynamoCustomerRepository implements ICustomerRepository {
       Item: customer
     };
 
-    await this.dynamoDB.put(params).promise();
+    await this.dynamoDB.putItem(params.TableName, params.Item);
     return customer;
   }
 
@@ -862,7 +564,7 @@ export class DynamoCustomerRepository implements ICustomerRepository {
       }
     };
 
-    await this.dynamoDB.update(params).promise();
+    await this.dynamoDB.updateItem(params.TableName, params.Key, params.UpdateExpression, params.ExpressionAttributeValues);
     return customer;
   }
 
@@ -872,7 +574,7 @@ export class DynamoCustomerRepository implements ICustomerRepository {
       Key: { id }
     };
 
-    await this.dynamoDB.delete(params).promise();
+    await this.dynamoDB.deleteItem(params.TableName, params.Key);
   }
 
   async exists(id: string): Promise<boolean> {
@@ -882,93 +584,12 @@ export class DynamoCustomerRepository implements ICustomerRepository {
 }`;
   }
 
-  private getDynamoTransactionRepository(): string {
-    return `import { DynamoDB } from 'aws-sdk';
-import { ITransactionRepository } from '../../domain/ports/ITransactionRepository';
-import { Transaction } from '../../domain/model/Transaction';
-
-export class DynamoTransactionRepository implements ITransactionRepository {
-  private dynamoDB: DynamoDB.DocumentClient;
-  private tableName: string;
-
-  constructor() {
-    this.dynamoDB = new DynamoDB.DocumentClient();
-    this.tableName = process.env.TRANSACTIONS_TABLE_NAME || 'transactions';
-  }
-
-  async findById(id: string): Promise<Transaction | null> {
-    const params = {
-      TableName: this.tableName,
-      Key: { id }
-    };
-
-    const result = await this.dynamoDB.get(params).promise();
-    return result.Item as Transaction || null;
-  }
-
-  async findByCustomerId(customerId: string): Promise<Transaction[]> {
-    const params = {
-      TableName: this.tableName,
-      IndexName: 'customerId-index',
-      KeyConditionExpression: 'customerId = :customerId',
-      ExpressionAttributeValues: {
-        ':customerId': customerId
-      }
-    };
-
-    const result = await this.dynamoDB.query(params).promise();
-    return result.Items as Transaction[] || [];
-  }
-
-  async save(transaction: Transaction): Promise<Transaction> {
-    const params = {
-      TableName: this.tableName,
-      Item: transaction
-    };
-
-    await this.dynamoDB.put(params).promise();
-    return transaction;
-  }
-
-  async update(transaction: Transaction): Promise<Transaction> {
-    const params = {
-      TableName: this.tableName,
-      Key: { id: transaction.id },
-      UpdateExpression: 'SET #status = :status, updatedAt = :updatedAt',
-      ExpressionAttributeNames: {
-        '#status': 'status'
-      },
-      ExpressionAttributeValues: {
-        ':status': transaction.status,
-        ':updatedAt': transaction.updatedAt
-      }
-    };
-
-    await this.dynamoDB.update(params).promise();
-    return transaction;
-  }
-
-  async delete(id: string): Promise<void> {
-    const params = {
-      TableName: this.tableName,
-      Key: { id }
-    };
-
-    await this.dynamoDB.delete(params).promise();
-  }
-
-  async exists(id: string): Promise<boolean> {
-    const transaction = await this.findById(id);
-    return transaction !== null;
-  }
-}`;
-  }
 
   private getAwsSecretService(): string {
     return `import { SecretsManager } from 'aws-sdk';
-import { IAwsSecretRepository } from '../../domain/ports/IAwsSecretRepository';
+import { IAwsSecretService } from '../../domain/ports/IAwsSecretService';
 
-export class AwsSecretService implements IAwsSecretRepository {
+export class AwsSecretService implements IAwsSecretService {
   private secretsManager: SecretsManager;
 
   constructor() {
@@ -1003,270 +624,92 @@ export class AwsSecretService implements IAwsSecretRepository {
 }`;
   }
 
-  private getCyberSourcePaymentService(): string {
-    return `import { IPaymentService } from '../../domain/ports/IPaymentService';
-import { ICyberSource } from '../../domain/model/interfaces/ICyberSource';
-import { CyberSourceRequestBuilder } from '../../domain/model/CyberSourceRequestBuilder';
 
-export class CyberSourcePaymentService implements IPaymentService {
-  private apiKey: string;
-  private merchantId: string;
-  private baseUrl: string;
+  private getExampleController(): string {
+    return `import { AuditTracker } from '@wallytech/sdk-audit';
+import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
+import { plainToInstance } from 'class-transformer';
+import { validate } from 'class-validator';
 
-  constructor() {
-    this.apiKey = process.env.CYBERSOURCE_API_KEY || '';
-    this.merchantId = process.env.CYBERSOURCE_MERCHANT_ID || '';
-    this.baseUrl = process.env.CYBERSOURCE_BASE_URL || 'https://apitest.cybersource.com';
-  }
 
-  async processPayment(paymentData: ICyberSource): Promise<any> {
-    try {
-      const requestBuilder = new CyberSourceRequestBuilder()
-        .setMerchantId(paymentData.merchantId)
-        .setAmount(paymentData.amount)
-        .setCurrency(paymentData.currency)
-        .setCardData(paymentData.cardData);
-
-      const request = requestBuilder.build();
-
-      // Simulate API call to CyberSource
-      const response = await this.callCyberSourceAPI(request);
-      
-      return {
-        status: response.status === 'AUTHORIZED' ? 'success' : 'failed',
-        transactionId: response.id,
-        reasonCode: response.reasonCode,
-        message: response.message
-      };
-    } catch (error) {
-      console.error('Error processing payment:', error);
-      throw new Error('Payment processing failed');
-    }
-  }
-
-  async validatePayment(paymentData: ICyberSource): Promise<boolean> {
-    // Basic validation
-    if (!paymentData.merchantId || !paymentData.amount || !paymentData.currency) {
-      return false;
-    }
-
-    if (paymentData.amount <= 0) {
-      return false;
-    }
-
-    if (!paymentData.cardData || !paymentData.cardData.number) {
-      return false;
-    }
-
-    return true;
-  }
-
-  async refundPayment(transactionId: string, amount: number): Promise<any> {
-    try {
-      // Simulate refund API call
-      const response = await this.callCyberSourceRefundAPI(transactionId, amount);
-      
-      return {
-        status: response.status === 'REFUNDED' ? 'success' : 'failed',
-        refundId: response.id,
-        amount: response.amount
-      };
-    } catch (error) {
-      console.error('Error processing refund:', error);
-      throw new Error('Refund processing failed');
-    }
-  }
-
-  private async callCyberSourceAPI(request: any): Promise<any> {
-    // Simulate API call
-    return {
-      id: Math.random().toString(36).substr(2, 9),
-      status: 'AUTHORIZED',
-      reasonCode: 100,
-      message: 'Successful transaction'
-    };
-  }
-
-  private async callCyberSourceRefundAPI(transactionId: string, amount: number): Promise<any> {
-    // Simulate refund API call
-    return {
-      id: Math.random().toString(36).substr(2, 9),
-      status: 'REFUNDED',
-      amount: amount
-    };
-  }
-}`;
-  }
-
-  private getRechargeController(): string {
-    return `import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { GetCustomerCommandHandler } from '../../domain/command_handlers/GetCustomerCommandHandler';
-import { PaymentCyberSourceCommandHandler } from '../../domain/command_handlers/PaymentCyberSourceCommandHandler';
-import { GetTransactionCommandHandler } from '../../domain/command_handlers/recharge/GetTransactionCommandHandler';
-import { UpdateTransactionCommandHandler } from '../../domain/command_handlers/recharge/UpdateTransactionCommandHandler';
-import { DynamoCustomerRepository } from '../../adapters/repository/DynamoCustomerRepository';
-import { DynamoTransactionRepository } from '../../adapters/repository/DynamoTransactionRepository';
-import { CyberSourcePaymentService } from '../../adapters/service/CyberSourcePaymentService';
+import { GetCustomerCommand } from '../../domain/commands/GetCustomerCommand';
 import { SuccessResponse } from '../../domain/common/SuccessResponse';
-import { InputRecharge } from './model/InputRecharge';
+import { ERROR_MESSAGES } from '../../domain/exceptions/constants/ErrorMessages';
+import { BaseException } from '../../domain/exceptions/core/BaseException';
+import { InvalidDataException } from '../../domain/exceptions/core/InvalidDataException';
+import { NotFoundException } from '../../domain/exceptions/core/NotFoundException';
+import { SystemException } from '../../domain/exceptions/core/SystemException';
 
-export class RechargeController {
-  private getCustomerHandler: GetCustomerCommandHandler;
-  private paymentHandler: PaymentCyberSourceCommandHandler;
-  private getTransactionHandler: GetTransactionCommandHandler;
-  private updateTransactionHandler: UpdateTransactionCommandHandler;
+import { extractValidationErrors, flattenErrorMessages } from '../../utils/ErrorExtractor';
+import { InputExample } from './model/InputExample';
+import Logger from '../../infra/Logger';
 
-  constructor() {
-    const customerRepository = new DynamoCustomerRepository();
-    const transactionRepository = new DynamoTransactionRepository();
-    const paymentService = new CyberSourcePaymentService();
 
-    this.getCustomerHandler = new GetCustomerCommandHandler(customerRepository);
-    this.paymentHandler = new PaymentCyberSourceCommandHandler(paymentService, transactionRepository);
-    this.getTransactionHandler = new GetTransactionCommandHandler(transactionRepository);
-    this.updateTransactionHandler = new UpdateTransactionCommandHandler(transactionRepository);
-  }
+export class ExampleController {
 
-  async handleRequest(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
+
+  constructor(
+    private readonly auditService: AuditTracker,
+    private readonly getCustomerHandler: GetCustomerCommandHandler
+  ) { }
+
+  async handle(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
+
     try {
-      const method = event.httpMethod;
-      const path = event.path;
+      Logger.getInstance().info('Inicio de proceso de validación de datos', JSON.stringify(event));
 
-      switch (method) {
-        case 'POST':
-          if (path === '/recharge') {
-            return await this.processRecharge(event);
-          }
-          break;
-        case 'GET':
-          if (path.startsWith('/recharge/transaction/')) {
-            return await this.getTransaction(event);
-          }
-          if (path.startsWith('/recharge/customer/')) {
-            return await this.getCustomer(event);
-          }
-          break;
-        case 'PUT':
-          if (path.startsWith('/recharge/transaction/')) {
-            return await this.updateTransaction(event);
-          }
-          break;
+      const body = JSON.parse(event.body ?? '{}');
+      const params = event.pathParameters ?? {};
+
+      const request = plainToInstance(InputExample, { ...body, ...params }) as unknown as InputExample;
+
+      const validationErrors = await validate(request);
+
+      if (validationErrors.length > 0) {
+
+        const extractedErrors = extractValidationErrors(validationErrors);
+        const errorMessages = flattenErrorMessages(extractedErrors);
+
+        Logger.getInstance().error('Mensajes de error:', JSON.stringify(errorMessages));
+
+        const errorResponse = new InvalidDataException(errorMessages)
+
+        this.auditService.error(errorResponse);
+
+        return errorResponse.toResponse();
+
       }
 
-      return {
-        statusCode: 404,
-        body: JSON.stringify({ error: 'Not found' })
-      };
+      const command = new GetCustomerCommand(request.data)
+      const result = await this.getCustomerHandler.handle(command);
+
+      if (!result) {
+        return new NotFoundException().toResponse();
+      }
+
+      return new SuccessResponse(result).toResponse();
     } catch (error) {
-      return {
-        statusCode: 500,
-        body: JSON.stringify({ error: 'Internal server error' })
-      };
-    }
-  }
 
-  private async processRecharge(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
-    const input: InputRecharge = JSON.parse(event.body || '{}');
-    
-    const command = {
-      customerId: input.customerId,
-      amount: input.amount,
-      currency: input.currency,
-      cardData: input.cardData
-    };
+      if (error instanceof BaseException) {
 
-    const result = await this.paymentHandler.handle(command);
-    
-    return {
-      statusCode: 201,
-      body: JSON.stringify(new SuccessResponse(result).toResponse())
-    };
-  }
+        this.auditService.error(error);
 
-  private async getTransaction(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
-    const transactionId = event.path.split('/')[3];
-    const command = { transactionId };
-    
-    const result = await this.getTransactionHandler.handle(command);
-    
-    if (!result) {
-      return {
-        statusCode: 404,
-        body: JSON.stringify({ error: 'Transaction not found' })
-      };
-    }
-    
-    return {
-      statusCode: 200,
-      body: JSON.stringify(new SuccessResponse(result).toResponse())
-    };
-  }
+        return error.toResponse();
+      }
 
-  private async getCustomer(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
-    const customerId = event.path.split('/')[3];
-    const command = { customerId };
-    
-    const result = await this.getCustomerHandler.handle(command);
-    
-    if (!result) {
-      return {
-        statusCode: 404,
-        body: JSON.stringify({ error: 'Customer not found' })
-      };
-    }
-    
-    return {
-      statusCode: 200,
-      body: JSON.stringify(new SuccessResponse(result).toResponse())
-    };
-  }
+      this.auditService.error(new SystemException(ERROR_MESSAGES.INTERNAL_ERROR));
 
-  private async updateTransaction(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
-    const transactionId = event.path.split('/')[3];
-    const input = JSON.parse(event.body || '{}');
-    
-    const command = {
-      transactionId,
-      status: input.status
-    };
-
-    const result = await this.updateTransactionHandler.handle(command);
-    
-    if (!result) {
-      return {
-        statusCode: 404,
-        body: JSON.stringify({ error: 'Transaction not found' })
-      };
+      return new SystemException(ERROR_MESSAGES.INTERNAL_ERROR).toResponse();
     }
 
-    return {
-      statusCode: 200,
-      body: JSON.stringify(new SuccessResponse(result).toResponse())
-    };
+
   }
+
+
 }`;
   }
 
-  private getInputRecharge(): string {
-    return `export interface InputRecharge {
-  customerId: string;
-  amount: number;
-  currency: string;
-  cardData: {
-    number: string;
-    expirationMonth: string;
-    expirationYear: string;
-    securityCode: string;
-    cardholderName: string;
-  };
-}
-
-export interface CreateRechargeInput extends InputRecharge {}
-
-export interface UpdateRechargeInput {
-  status?: 'pending' | 'completed' | 'failed' | 'cancelled';
-}`;
-  }
 
   private getIAuditInterface(): string {
     return `export interface IAudit {
@@ -1330,210 +773,212 @@ class AuditTrackerImpl implements AuditTracker {
   }
 
   private getDynamodb(): string {
-    return `import { DynamoDB } from 'aws-sdk';
+    return `import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
+import {
+  DeleteCommand,
+  DynamoDBDocumentClient,
+  GetCommand,
+  PutCommand,
+  QueryCommand,
+  UpdateCommand
+} from '@aws-sdk/lib-dynamodb';
 
-export class DynamoDBClient {
-  private dynamoDB: DynamoDB.DocumentClient;
+import AWSXRay from 'aws-xray-sdk-core';
+
+export class DynamoDBClientImp {
+  private dynamoDB: DynamoDBDocumentClient;
 
   constructor() {
-    this.dynamoDB = new DynamoDB.DocumentClient({
-      region: process.env.AWS_REGION || 'us-east-1'
-    });
+
+    const dynamoClient = AWSXRay.captureAWSv3Client(new DynamoDBClient({}))
+    this.dynamoDB = DynamoDBDocumentClient.from(dynamoClient)
+
   }
 
   async getItem(tableName: string, key: any): Promise<any> {
-    const params = {
+    const params = new GetCommand({
       TableName: tableName,
       Key: key
-    };
+    });
 
-    const result = await this.dynamoDB.get(params).promise();
+    const result = await this.dynamoDB.send(params);
     return result.Item;
   }
 
   async putItem(tableName: string, item: any): Promise<any> {
-    const params = {
+    const params = new PutCommand({
       TableName: tableName,
       Item: item
-    };
+    });
 
-    return await this.dynamoDB.put(params).promise();
+    return await this.dynamoDB.send(params);
   }
 
   async updateItem(tableName: string, key: any, updateExpression: string, expressionAttributeValues: any): Promise<any> {
-    const params = {
+    const params = new UpdateCommand({
       TableName: tableName,
       Key: key,
       UpdateExpression: updateExpression,
       ExpressionAttributeValues: expressionAttributeValues
-    };
+    });
 
-    return await this.dynamoDB.update(params).promise();
+    return await this.dynamoDB.send(params);
   }
 
   async deleteItem(tableName: string, key: any): Promise<any> {
-    const params = {
+    const params = new DeleteCommand({
       TableName: tableName,
       Key: key
-    };
+    });
 
-    return await this.dynamoDB.delete(params).promise();
+    return await this.dynamoDB.send(params);
   }
 
   async query(tableName: string, keyConditionExpression: string, expressionAttributeValues: any): Promise<any> {
-    const params = {
+    const params = new QueryCommand({
       TableName: tableName,
       KeyConditionExpression: keyConditionExpression,
       ExpressionAttributeValues: expressionAttributeValues
-    };
+    });
 
-    const result = await this.dynamoDB.query(params).promise();
+    const result = await this.dynamoDB.send(params);
     return result.Items;
   }
 }`;
   }
 
-  private getLogger(): string {
-    return `export class Logger {
-  private static instance: Logger;
-
-  static setInstance(context: any): void {
-    this.instance = new Logger(context);
-  }
-
-  static getInstance(): Logger {
-    if (!this.instance) {
-      this.instance = new Logger({});
-    }
-    return this.instance;
-  }
-
-  constructor(private context: any) {}
-
-  info(message: string, data?: any): void {
-    console.log(\`[INFO] \${message}\`, data ? JSON.stringify(data, null, 2) : '');
-  }
-
-  error(message: string, data?: any): void {
-    console.error(\`[ERROR] \${message}\`, data ? JSON.stringify(data, null, 2) : '');
-  }
-
-  warn(message: string, data?: any): void {
-    console.warn(\`[WARN] \${message}\`, data ? JSON.stringify(data, null, 2) : '');
-  }
-
-  debug(message: string, data?: any): void {
-    console.debug(\`[DEBUG] \${message}\`, data ? JSON.stringify(data, null, 2) : '');
-  }
-}`;
-  }
 
   private getErrorExtractor(): string {
-    return `export class ErrorExtractor {
-  static extractErrorMessage(error: any): string {
-    if (error instanceof Error) {
-      return error.message;
-    }
-    
-    if (typeof error === 'string') {
-      return error;
-    }
-    
-    if (error && error.message) {
-      return error.message;
-    }
-    
-    return 'Unknown error occurred';
-  }
+    return `import { ValidationError } from 'class-validator';
 
-  static extractErrorCode(error: any): string {
-    if (error && error.code) {
-      return error.code;
-    }
-    
-    if (error && error.statusCode) {
-      return error.statusCode.toString();
-    }
-    
-    return 'UNKNOWN_ERROR';
-  }
+export interface ExtractedError {
+  field: string;
+  messages: string[];
+}
 
-  static extractErrorDetails(error: any): any {
-    if (error && error.details) {
-      return error.details;
-    }
-    
-    if (error && error.data) {
-      return error.data;
-    }
-    
-    return {};
-  }
-}`;
-  }
+export interface ErrorExtractionResult {
+  errors: ExtractedError[];
+  hasErrors: boolean;
+  errorCount: number;
+}
 
-  private getFormatExpirationMonth(): string {
-    return `export function formatExpirationMonth(month: string | number): string {
-  const monthStr = month.toString();
-  
-  if (monthStr.length === 1) {
-    return \`0\${monthStr}\`;
-  }
-  
-  if (monthStr.length === 2) {
-    return monthStr;
-  }
-  
-  throw new Error('Invalid month format');
-}`;
-  }
-
-  private getGetCardProvider(): string {
-    return `export function getCardProvider(cardNumber: string): string {
-  // Remove spaces and non-numeric characters
-  const cleanNumber = cardNumber.replace(/\\D/g, '');
-  
-  // Visa
-  if (/^4/.test(cleanNumber)) {
-    return 'visa';
-  }
-  
-  // Mastercard
-  if (/^5[1-5]/.test(cleanNumber)) {
-    return 'mastercard';
-  }
-  
-  // American Express
-  if (/^3[47]/.test(cleanNumber)) {
-    return 'amex';
-  }
-  
-  // Discover
-  if (/^6(?:011|5)/.test(cleanNumber)) {
-    return 'discover';
-  }
-  
-  return 'others';
-}`;
-  }
-
-  private getWarmupHandler(): string {
-    return `export class WarmupHandler {
-  static isWarmupRequest(event: any): boolean {
-    return event.source === 'serverless-plugin-warmup';
-  }
-
-  static handleWarmup(): any {
+/**
+ * Extrae y formatea los mensajes de error de validación
+ * @param validationErrors - Array de errores de validación de class-validator
+ * @returns Objeto con los errores extraídos y metadatos
+ */
+export function extractValidationErrors(validationErrors: ValidationError[]): ErrorExtractionResult {
+  if (!validationErrors || validationErrors.length === 0) {
     return {
-      statusCode: 200,
-      body: JSON.stringify({
-        message: 'Lambda function warmed up successfully',
-        timestamp: new Date().toISOString()
-      })
+      errors: [],
+      hasErrors: false,
+      errorCount: 0
     };
   }
-}`;
+
+  const extractedErrors: ExtractedError[] = [];
+
+  validationErrors.forEach(error => {
+    const field = error.property;
+    const messages: string[] = [];
+
+    // Extraer mensajes de las restricciones
+    if (error.constraints) {
+      Object.values(error.constraints).forEach(message => {
+        if (message && typeof message === 'string') {
+          messages.push(message);
+        }
+      });
+    }
+
+    // Procesar errores anidados (para objetos complejos)
+    if (error.children && error.children.length > 0) {
+      const nestedErrors = extractValidationErrors(error.children);
+      nestedErrors.errors.forEach(nestedError => {
+        const nestedField = \`\${field}.\${nestedError.field}\`;
+        const existingError = extractedErrors.find(e => e.field === nestedField);
+        
+        if (existingError) {
+          existingError.messages.push(...nestedError.messages);
+        } else {
+          extractedErrors.push({
+            field: nestedField,
+            messages: [...nestedError.messages]
+          });
+        }
+      });
+    }
+
+    // Agregar errores del campo actual si tiene mensajes
+    if (messages.length > 0) {
+      const existingError = extractedErrors.find(e => e.field === field);
+      if (existingError) {
+        existingError.messages.push(...messages);
+      } else {
+        extractedErrors.push({
+          field,
+          messages
+        });
+      }
+    }
+  });
+
+  return {
+    errors: extractedErrors,
+    hasErrors: extractedErrors.length > 0,
+    errorCount: extractedErrors.reduce((total, error) => total + error.messages.length, 0)
+  };
+}
+
+/**
+ * Convierte los errores extraídos a un formato plano de mensajes
+ * @param extractedErrors - Resultado de extractValidationErrors
+ * @returns Array de mensajes de error
+ */
+export function flattenErrorMessages(extractedErrors: ErrorExtractionResult): string[] {
+  const messages: string[] = [];
+  
+  extractedErrors.errors.forEach(error => {
+    messages.push(...error.messages);
+  });
+  
+  return messages;
+}
+
+/**
+ * Convierte los errores extraídos a un formato de objeto plano
+ * @param extractedErrors - Resultado de extractValidationErrors
+ * @returns Objeto con campo como clave y mensajes como valor
+ */
+export function errorsToObject(extractedErrors: ErrorExtractionResult): Record<string, string[]> {
+  const result: Record<string, string[]> = {};
+  
+  extractedErrors.errors.forEach(error => {
+    result[error.field] = error.messages;
+  });
+  
+  return result;
+}
+
+/**
+ * Crea un mensaje de error resumido
+ * @param extractedErrors - Resultado de extractValidationErrors
+ * @returns Mensaje resumido de los errores
+ */
+export function createSummaryMessage(extractedErrors: ErrorExtractionResult): string {
+  if (!extractedErrors.hasErrors) {
+    return 'No hay errores de validación';
   }
+
+  const errorCount = extractedErrors.errorCount;
+  const fieldCount = extractedErrors.errors.length;
+  
+  return \`Se encontraron \${errorCount} error(es) de validación en \${fieldCount} campo(s)\`;
+} `;
+  }
+
+
+
 
   private getCyberSourceTypes(): string {
     return `declare module 'cybersource-rest-client' {
@@ -1612,28 +1057,16 @@ export class DynamoDBClient {
 
   private getTestFile(): string {
     return `import { handler } from '../src/index';
-import { APIGatewayProxyEvent, Context } from 'aws-lambda';
+import { Context } from 'aws-lambda';
 
 describe('AWS Hexagonal Architecture Lambda Handler', () => {
-  let mockEvent: APIGatewayProxyEvent;
+  let mockEvent: any;
   let mockContext: Context;
 
   beforeEach(() => {
     mockEvent = {
-      httpMethod: 'POST',
-      path: '/recharge',
-      body: JSON.stringify({
-        customerId: 'test-customer-id',
-        amount: 100.00,
-        currency: 'USD',
-        cardData: {
-          number: '4111111111111111',
-          expirationMonth: '12',
-          expirationYear: '2025',
-          securityCode: '123',
-          cardholderName: 'Test User'
-        }
-      }),
+      httpMethod: 'GET',
+      path: '/example/customer/test-customer-id',
       headers: {},
       multiValueHeaders: {},
       queryStringParameters: null,
@@ -1654,118 +1087,64 @@ describe('AWS Hexagonal Architecture Lambda Handler', () => {
       logGroupName: '/aws/lambda/test-function',
       logStreamName: '2023/01/01/[$LATEST]test-stream',
       getRemainingTimeInMillis: () => 30000,
-      done: () => {},
-      fail: () => {},
-      succeed: () => {}
+      done: () => { },
+      fail: () => { },
+      succeed: () => { }
     };
   });
 
-  it('should handle POST recharge request successfully', async () => {
-    const result = await handler(mockEvent, mockContext);
-    
-    expect(result.statusCode).toBe(201);
-    expect(result.body).toBeDefined();
-    
-    const body = JSON.parse(result.body);
-    expect(body.message).toBeDefined();
-  });
 
-  it('should handle GET transaction request successfully', async () => {
-    mockEvent.httpMethod = 'GET';
-    mockEvent.path = '/recharge/transaction/123';
-
-    const result = await handler(mockEvent, mockContext);
-    
-    expect(result.statusCode).toBe(200);
-    expect(result.body).toBeDefined();
-  });
 
   it('should handle GET customer request successfully', async () => {
     mockEvent.httpMethod = 'GET';
-    mockEvent.path = '/recharge/customer/123';
+    mockEvent.path = '/example/customer/123';
 
     const result = await handler(mockEvent, mockContext);
-    
+
     expect(result.statusCode).toBe(200);
     expect(result.body).toBeDefined();
   });
 
-  it('should handle PUT transaction request successfully', async () => {
-    mockEvent.httpMethod = 'PUT';
-    mockEvent.path = '/recharge/transaction/123';
-    mockEvent.body = JSON.stringify({
-      status: 'completed'
-    });
 
-    const result = await handler(mockEvent, mockContext);
-    
-    expect(result.statusCode).toBe(200);
-    expect(result.body).toBeDefined();
-  });
-
-  it('should handle warmup requests', async () => {
-    mockEvent.source = 'serverless-plugin-warmup';
-
-    const result = await handler(mockEvent, mockContext);
-    
-    expect(result.statusCode).toBe(200);
-    expect(result.body).toBeDefined();
-    
-    const body = JSON.parse(result.body);
-    expect(body.message).toContain('warmed up');
-  });
 });
 `;
   }
 
   private getMainFile(): string {
-    const loggerImport = this.options.usePowertoolsLogger ? `import Logger from './utils/Logger';` : '';
-    const auditImport = this.options.useWallyAudit ? `import { Audit } from './infra/Audit';` : '';
-    
-    const loggerInit = this.options.usePowertoolsLogger ? `  Logger.setInstance(context);` : '';
-    const auditInit = this.options.useWallyAudit ? `  const auditTracker = await Audit.createTracker(event as any, context, {
-    action: context.functionName,
-    location: 'BACKOFFICE'
-  });` : '';
-    
-    const loggerInfo = this.options.usePowertoolsLogger ? `  Logger.getInstance().info('Evento recibido:', JSON.stringify(event));
-  Logger.getInstance().info('Contexto:', JSON.stringify(context));` : `  console.log('Event:', JSON.stringify(event, null, 2));
-  console.log('Context:', JSON.stringify(context, null, 2));`;
-    
-    const loggerError = this.options.usePowertoolsLogger ? `    Logger.getInstance().error('Error in handler:', {raw: error, error: {error}, extra: { }});` : `    console.error('Error:', error);`;
-    
-    const auditSuccess = this.options.useWallyAudit ? `    await auditTracker.success(result);` : '';
-    const auditError = this.options.useWallyAudit ? `    await auditTracker.error(error);` : '';
-
-    return `${loggerImport}
-${auditImport}
+    return `import { AuditTracker } from '@wallytech/sdk-audit';
 import { APIGatewayProxyEvent, APIGatewayProxyResult, Context } from 'aws-lambda';
-import { RechargeController } from './entrypoints/api/RechargeController';
-import { WarmupHandler } from './utils/WarmupHandler';
-
-// Initialize dependencies
-const rechargeController = new RechargeController();
+import { DynamoCustomerRepository } from './adapters/repository/DynamoCustomerRepository';
+import { GetCustomerCommandHandler } from './domain/command_handlers/GetCustomerCommandHandler';
+import { ExampleController } from './entrypoints/api/ExampleController';
+import { Audit } from './infra/Audit';
+import Logger from './infra/Logger';
+import { AUDIT_OVERRIDES } from './domain/common/consts/audit.constants';
 
 export const handler = async (
   event: APIGatewayProxyEvent,
   context: Context
 ): Promise<APIGatewayProxyResult> => {
-  // Handle warmup requests
-  if (WarmupHandler.isWarmupRequest(event)) {
-    return WarmupHandler.handleWarmup();
-  }
 
-${loggerInit}
-${auditInit}
-${loggerInfo}
+  Logger.setInstance(context);
+  const auditTracker = await Audit.createTracker(event as any, context, {
+    action: context.functionName,
+    location: AUDIT_OVERRIDES.location
+  });
+  Logger.getInstance().info('Evento recibido:', JSON.stringify(event));
+  Logger.getInstance().info('Contexto:', JSON.stringify(context));
+
+  // Initialize dependencies
+  const customerRepository = new DynamoCustomerRepository();
+  const getCustomerHandler = new GetCustomerCommandHandler(customerRepository);
+  const exampleController = new ExampleController(auditTracker as AuditTracker, getCustomerHandler);
 
   try {
-    const result = await rechargeController.handleRequest(event);
-    ${auditSuccess}
+    const result = await exampleController.handle(event);
+    await auditTracker.success(result);
     return result;
   } catch (error) {
-    ${loggerError}
-    ${auditError}
+    Logger.getInstance().error('Error in handler:', { raw: error, error: { error }, extra: {} });
+    await auditTracker.error(error);
     return {
       statusCode: 500,
       body: JSON.stringify({ error: 'Internal server error' })
@@ -1776,20 +1155,8 @@ ${loggerInfo}
 // For local testing
 if (require.main === module) {
   const testEvent = {
-    httpMethod: 'POST',
-    path: '/recharge',
-    body: JSON.stringify({
-      customerId: 'test-customer-id',
-      amount: 100.00,
-      currency: 'USD',
-      cardData: {
-        number: '4111111111111111',
-        expirationMonth: '12',
-        expirationYear: '2025',
-        securityCode: '123',
-        cardholderName: 'Test User'
-      }
-    })
+    httpMethod: 'GET',
+    path: '/example/customer/test-customer-id'
   } as APIGatewayProxyEvent;
 
   handler(testEvent, {} as Context).then(result => {
@@ -1797,5 +1164,65 @@ if (require.main === module) {
   });
 }
 `;
+  }
+
+  private getLogger(): string {
+    return `import { Logger as LoggerPower } from '@aws-lambda-powertools/logger';
+import { Context } from "aws-lambda";
+
+class Logger {
+  private static instance: LoggerPower;
+
+  public static getInstance(): LoggerPower {
+    return Logger.instance;
+  }
+  
+  public static setInstance(context: Context) {
+    Logger.instance = new LoggerPower({ serviceName: context.functionName });
+    Logger.getInstance().addContext(context);
+  }
+}
+
+export default Logger;
+`;
+  }
+
+  private getInputExample(): string {
+    return `import "reflect-metadata";
+
+import { IsString } from "class-validator";
+import { ERROR_MESSAGES } from "../../../domain/exceptions/constants/ErrorMessages";
+
+export class InputExample {
+
+  @IsString({ message: ERROR_MESSAGES.INVALID_DATA })
+  data!: string;
+
+  constructor(data: string) {
+    this.data = data
+  }
+} `;
+  }
+
+  private getJestConfig(): string {
+    return `module.exports = {
+  preset: 'ts-jest',
+  testEnvironment: 'node',
+  testMatch: ['**/test/**/*.test.ts'],
+  collectCoverageFrom: [
+    'src/**/*.ts',
+    '!src/app.ts'
+  ],
+  coverageDirectory: 'coverage',
+  coverageReporters: ['text', 'lcov'],
+  moduleNameMapper: {
+    '^@/(.*)$': '<rootDir>/src/$1'
+  },
+  transform: {
+    '^.+\.ts$': ['ts-jest', {
+      tsconfig: 'tsconfig.test.json'
+    }]
+  },  
+}; `;
   }
 }

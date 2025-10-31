@@ -1,0 +1,1 @@
+{"version":3,"file":"app.module.js","sourceRoot":"","sources":["../../src/logging-service/app.module.ts"],"names":[],"mappings":";;;;;;;;;AAAA,2CAAwC;AACxC,6DAAyD;AACzD,uDAAmD;AACnD,oFAAgF;AAMzE,IAAM,SAAS,GAAf,MAAM,SAAS;CAAG,CAAA;AAAZ,8BAAS;oBAAT,SAAS;IAJrB,IAAA,eAAM,EAAC;QACN,WAAW,EAAE,CAAC,sCAAiB,CAAC;QAChC,SAAS,EAAE,CAAC,gCAAc,EAAE,4CAAoB,CAAC;KAClD,CAAC;GACW,SAAS,CAAG"}

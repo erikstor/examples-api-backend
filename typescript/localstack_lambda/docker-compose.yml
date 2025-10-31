@@ -1,0 +1,30 @@
+version: "3.8"
+
+services:
+  localstack:
+    image: localstack/localstack:latest
+    container_name: localstack-lambda
+    ports:
+      - "4566:4566" # LocalStack Gateway
+      - "4571:4571" # LocalStack deprecated services
+    environment:
+      - SERVICES=lambda,dynamodb,iam,sts,logs,apigateway
+      - DEBUG=1
+      - LAMBDA_EXECUTOR=local # Usar local para mejor debugging
+      - LAMBDA_REMOTE_DOCKER=0
+      - LAMBDA_DOCKER_NETWORK=localstack-net
+      - LOCALSTACK_HOST=localhost:4566
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - AWS_DEFAULT_REGION=us-east-1
+    volumes:
+      - "./localstack-data:/var/lib/localstack"
+      - "/var/run/docker.sock:/var/run/docker.sock"
+      - "./dist:/tmp/lambda" # Montar el directorio dist para acceso rápido
+    networks:
+      - localstack-net
+    restart: unless-stopped
+
+networks:
+  localstack-net:
+    driver: bridge

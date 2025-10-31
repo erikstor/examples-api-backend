@@ -1,0 +1,54 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "type": "npm",
+      "script": "build",
+      "problemMatcher": ["$tsc"],
+      "label": "npm: build",
+      "detail": "Compile TypeScript to JavaScript"
+    },
+    {
+      "type": "npm",
+      "script": "dev",
+      "problemMatcher": [],
+      "label": "npm: dev",
+      "detail": "Run in development mode with ts-node"
+    },
+    {
+      "type": "npm",
+      "script": "init-db",
+      "problemMatcher": [],
+      "label": "npm: init-db",
+      "detail": "Initialize DynamoDB table"
+    },
+    {
+      "type": "npm",
+      "script": "test-crud",
+      "problemMatcher": [],
+      "label": "npm: test-crud",
+      "detail": "Run CRUD tests"
+    },
+    {
+      "type": "shell",
+      "label": "🐳 Start LocalStack",
+      "command": "docker-compose up -d",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "type": "shell",
+      "label": "🛑 Stop LocalStack",
+      "command": "docker-compose down",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    }
+  ]
+}
+

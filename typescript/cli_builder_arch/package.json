@@ -25,13 +25,25 @@
   "author": "Tu nombre",
   "license": "MIT",
   "dependencies": {
-    "commander": "^11.1.0",
-    "inquirer": "^9.2.12",
-    "chalk": "^4.1.2"
+    "aws-sdk": "^2.1490.0",
+    "aws-lambda": "^1.0.7",
+    "@aws-lambda-powertools/logger": "^2.27.0",
+    "@aws-lambda-powertools/tracer": "^2.27.0",
+    "@wallytech/sdk-audit": "^1.1.4",
+    "class-validator": "^0.14.0",
+    "class-transformer": "^0.5.1",
+    "reflect-metadata": "^0.2.2",
+    "aws-xray-sdk": "^3.5.0",
+    "@aws-sdk/client-dynamodb": "^3.894.0",
+    "@aws-sdk/lib-dynamodb": "^3.894.0",
+    "axios": "^1.6.0",
+    "luxon": "^3.4.0"
   },
   "devDependencies": {
     "@types/node": "^20.8.0",
     "@types/inquirer": "^9.0.7",
+    "@types/aws-lambda": "^8.10.0",
+    "@types/luxon": "^3.3.0",
     "typescript": "^5.2.2",
     "ts-node": "^10.9.1",
     "webpack": "^5.89.0",

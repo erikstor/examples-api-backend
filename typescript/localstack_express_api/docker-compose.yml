@@ -1,0 +1,18 @@
+services:
+  localstack:
+    image: localstack/localstack:latest
+    container_name: localstack-dynamodb
+    ports:
+      - "4566:4566"            # LocalStack Gateway
+    environment:
+      - SERVICES=dynamodb
+      - DEBUG=0
+      - LOCALSTACK_HOST=localhost:4566
+    networks:
+      - localstack-net
+    restart: unless-stopped
+
+networks:
+  localstack-net:
+    driver: bridge
+

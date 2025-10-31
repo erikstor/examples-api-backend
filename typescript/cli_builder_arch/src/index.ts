@@ -22,7 +22,7 @@ program
   .description('Crear un nuevo proyecto con una arquitectura específica')
   .action(async () => {
     try {
-      console.log(chalk.blue.bold('\n🏗️  Generador de Arquitecturas CLI\n'));
+      console.log(chalk.blue.bold('\nGenerador de Arquitecturas CLI\n'));
       
       // Preguntar por la arquitectura
       const { architecture } = await inquirer.prompt([
@@ -31,11 +31,11 @@ program
           name: 'architecture',
           message: '¿Qué arquitectura quieres usar?',
           choices: [
-            { name: '🏛️  Layered Architecture (Arquitectura en Capas)', value: 'layered' },
-            { name: '🧹 Clean Architecture', value: 'clean' },
-            { name: '🔷 Hexagonal Architecture', value: 'hexagonal' },
-            { name: '☁️  AWS Hexagonal Architecture', value: 'aws-hexagonal' },
-            { name: '🔀 Hybrid Wally Architecture', value: 'hybrid-wally' }
+            { name: 'Layered Architecture (Arquitectura en Capas)', value: 'layered' },
+            { name: 'Clean Architecture', value: 'clean' },
+            { name: 'Hexagonal Architecture', value: 'hexagonal' },
+            { name: 'AWS Hexagonal Architecture', value: 'aws-hexagonal' },
+            { name: 'Hybrid Wally Architecture', value: 'hybrid-wally' }
           ]
         }
       ]);
@@ -130,18 +130,18 @@ program
           throw new Error('Arquitectura no soportada');
       }
 
-      console.log(chalk.yellow(`\n📁 Generando proyecto "${projectName}" con ${architecture}...\n`));
+      console.log(chalk.yellow(`\nGenerando proyecto..."${projectName}" con ${architecture}...\n`));
       
       await generator.generate(projectName, { usePowertoolsLogger, useWallyAudit, customPath });
       
       const projectLocation = customPath ? `${customPath}/${projectName}` : `./${projectName}`;
       
-      console.log(chalk.green.bold('\n✅ ¡Proyecto generado exitosamente!\n'));
-      console.log(chalk.cyan(`📂 Ubicación: ${projectLocation}`));
-      console.log(chalk.cyan(`🚀 Para empezar: cd ${projectLocation} && npm install`));
+      console.log(chalk.green.bold('\n¡Proyecto generado exitosamente!\n'));
+      console.log(chalk.cyan(`Ubicación: ${projectLocation}`));
+      console.log(chalk.cyan(`Para empezar: cd ${projectLocation} && npm install`));
       
     } catch (error) {
-      console.error(chalk.red.bold('\n❌ Error:'), error);
+      console.error(chalk.red.bold('\nError:'), error);
       process.exit(1);
     }
   });

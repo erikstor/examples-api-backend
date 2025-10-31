@@ -22,7 +22,6 @@ export class AWSHexagonalArchitectureGenerator extends ArchitectureGenerator {
     await this.createDirectory('src/entrypoints/api');
     await this.createDirectory('src/entrypoints/api/model');
     await this.createDirectory('src/infra');
-    await this.createDirectory('src/infra/interfaces');
     await this.createDirectory('src/types');
     await this.createDirectory('src/utils');
     await this.createDirectory('test');
@@ -31,7 +30,6 @@ export class AWSHexagonalArchitectureGenerator extends ArchitectureGenerator {
     await this.createFile('src/domain/model/ExampleModel.ts', this.getExampleModel());
     await this.createFile('src/domain/model/interfaces/IExample.ts', this.getIExampleInterface());
     await this.createFile('src/domain/model/interfaces/IResponse.ts', this.getIResponseInterface());
-    await this.createFile('src/domain/model/interfaces/ITransfer.ts', this.getITransferInterface());
     await this.createFile('src/domain/ports/IAwsSecretService.ts', this.getIAwsSecretServicePort());
     await this.createFile('src/domain/ports/ICustomerRepository.ts', this.getICustomerRepositoryPort());
     await this.createFile('src/domain/commands/GetCustomerCommand.ts', this.getGetCustomerCommand());
@@ -51,22 +49,23 @@ export class AWSHexagonalArchitectureGenerator extends ArchitectureGenerator {
 
     // Audit constants si está habilitado
     if (this.options.useWallyAudit) {
-      await this.createFile('src/domain/common/consts/audit.constants.ts', this.getAuditConstants());
+      await this.createFile('src/domain/common/consts/AuditConstants.ts', this.getAuditConstants());
     }
 
     // Adapters files
     await this.createFile('src/adapters/repository/DynamoCustomerRepository.ts', this.getDynamoCustomerRepository());
-    await this.createFile('src/adapters/service/AwsSecretService.ts', this.getAwsSecretService());
+    await this.createFile('src/adapters/service/ExampleService.ts', this.getExampleService());
 
     // Entrypoints files
     await this.createFile('src/entrypoints/api/ExampleController.ts', this.getExampleController());
     await this.createFile('src/entrypoints/api/model/InputExample.ts', this.getInputExample());
 
     // Infrastructure files
-    await this.createFile('src/infra/interfaces/IAudit.ts', this.getIAuditInterface());
-    await this.createFile('src/infra/Audit.ts', this.getAudit());
     await this.createFile('src/infra/Dynamodb.ts', this.getDynamodb());
     await this.createFile('src/infra/Logger.ts', this.getLogger());
+    await this.createFile('src/infra/HttpClient.ts', this.getHttpClient());
+    await this.createFile('src/infra/Date.ts', this.getDateUtils());
+    await this.createFile('src/infra/AwsSecretManager.ts', this.getAwsSecretManager());
 
     // Utils and types
     await this.createFile('src/utils/ErrorExtractor.ts', this.getErrorExtractor());
@@ -77,6 +76,7 @@ export class AWSHexagonalArchitectureGenerator extends ArchitectureGenerator {
     // Test file
     await this.createFile('test/example.test.ts', this.getTestFile());
     await this.createFile('jest.config.js', this.getJestConfig());
+    await this.createFile('tsconfig.test.json', this.getTsConfigTest());
   }
 
   private getExampleModel(): string {
@@ -152,18 +152,6 @@ export interface IResponse {
 }`;
   }
 
-  private getITransferInterface(): string {
-    return `export interface ITransfer {
-  id: string;
-  fromAccount: string;
-  toAccount: string;
-  amount: number;
-  currency: string;
-  status: 'pending' | 'completed' | 'failed';
-  createdAt: Date;
-  updatedAt: Date;
-}`;
-  }
 
   private getIAwsSecretServicePort(): string {
     return `export interface IAwsSecretService {
@@ -419,7 +407,7 @@ import { SUCCESS_CODES, SUCCESS_MESSAGES } from "./consts/SuccessMessages";
 export class SuccessResponse implements IResponse {
 
   constructor(
-    public readonly data: any,
+    public readonly data: any = {},
     public readonly name: string = 'SuccessResponse',
     public readonly title: string = 'Success',
     public readonly message: string = SUCCESS_MESSAGES.OK,
@@ -585,42 +573,9 @@ export class DynamoCustomerRepository implements ICustomerRepository {
   }
 
 
-  private getAwsSecretService(): string {
-    return `import { SecretsManager } from 'aws-sdk';
-import { IAwsSecretService } from '../../domain/ports/IAwsSecretService';
-
-export class AwsSecretService implements IAwsSecretService {
-  private secretsManager: SecretsManager;
-
-  constructor() {
-    this.secretsManager = new SecretsManager({
-      region: process.env.AWS_REGION || 'us-east-1'
-    });
-  }
-
-  async getSecret(secretName: string): Promise<string> {
-    try {
-      const result = await this.secretsManager.getSecretValue({
-        SecretId: secretName
-      }).promise();
-
-      return result.SecretString || '';
-    } catch (error) {
-      console.error('Error getting secret:', error);
-      throw new Error(\`Failed to get secret: \${secretName}\`);
-    }
-  }
-
-  async getSecretValue(secretName: string, key: string): Promise<string> {
-    try {
-      const secretString = await this.getSecret(secretName);
-      const secretObject = JSON.parse(secretString);
-      return secretObject[key] || '';
-    } catch (error) {
-      console.error('Error getting secret value:', error);
-      throw new Error(\`Failed to get secret value: \${secretName}.\${key}\`);
-    }
-  }
+  private getExampleService(): string {
+    return `export class ExampleService {
+  // Clase vacía de ejemplo
 }`;
   }
 
@@ -654,31 +609,39 @@ export class ExampleController {
     private readonly getCustomerHandler: GetCustomerCommandHandler
   ) { }
 
+  private async validateRequest(event: APIGatewayProxyEvent) {
+    const body = JSON.parse(event.body ?? '{}');
+    const params = event.pathParameters ?? {};
+
+    const request = plainToInstance(InputExample, { ...body, ...params }) as unknown as InputExample;
+
+    const validationErrors = await validate(request);
+
+    if (validationErrors.length > 0) {
+
+      const extractedErrors = extractValidationErrors(validationErrors);
+      const errorMessages = flattenErrorMessages(extractedErrors);
+
+      Logger.getInstance().error('Mensajes de error:', JSON.stringify(errorMessages));
+
+      const errorResponse = new InvalidDataException(errorMessages)
+
+      this.auditService.error(errorResponse);
+
+      return errorResponse.toResponse();
+
+    }
+  }
+
   async handle(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
 
     try {
       Logger.getInstance().info('Inicio de proceso de validación de datos', JSON.stringify(event));
 
-      const body = JSON.parse(event.body ?? '{}');
-      const params = event.pathParameters ?? {};
+      const request = await this.validateRequest(event);
 
-      const request = plainToInstance(InputExample, { ...body, ...params }) as unknown as InputExample;
-
-      const validationErrors = await validate(request);
-
-      if (validationErrors.length > 0) {
-
-        const extractedErrors = extractValidationErrors(validationErrors);
-        const errorMessages = flattenErrorMessages(extractedErrors);
-
-        Logger.getInstance().error('Mensajes de error:', JSON.stringify(errorMessages));
-
-        const errorResponse = new InvalidDataException(errorMessages)
-
-        this.auditService.error(errorResponse);
-
-        return errorResponse.toResponse();
-
+      if (request instanceof InvalidDataException) {
+        return request.toResponse();
       }
 
       const command = new GetCustomerCommand(request.data)
@@ -711,63 +674,395 @@ export class ExampleController {
   }
 
 
-  private getIAuditInterface(): string {
-    return `export interface IAudit {
-  action: string;
-  source: string;
-  location: string;
-  timestamp: Date;
-  userId?: string;
-  details?: any;
-}
 
-export interface AuditTracker {
-  success(result: any): Promise<void>;
-  error(error: any): Promise<void>;
+  private getHttpClient(): string {
+    return `import axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
+import Logger from './Logger';
+
+export class HttpClient {
+  /**
+   * Método estático para realizar peticiones HTTP usando axios
+   * @param config Configuración de axios para la petición
+   * @returns Promise con la respuesta de la petición
+   */
+  static async request<T = any>(config: AxiosRequestConfig): Promise<AxiosResponse<T>> {
+    try {
+      const response = await axios.request<T>(config);
+      return response;
+    } catch (error: any) {
+      Logger.getInstance().error('Error in request:', {
+        raw: error,
+        error: { error },
+        extra: {
+          config
+        }
+      });
+      throw error;
+    }
+  }
 }`;
   }
 
-  private getAudit(): string {
-    return `import { IAudit, AuditTracker } from './interfaces/IAudit';
+  private getDateUtils(): string {
+    return `import { DateTime, Duration } from 'luxon';
 
-export class Audit implements IAudit {
-  constructor(
-    public readonly action: string,
-    public readonly source: string,
-    public readonly location: string,
-    public readonly timestamp: Date = new Date(),
-    public readonly userId?: string,
-    public readonly details?: any
-  ) {}
-
-  static createTracker(event: any, context: any, options: { action: string; location: string }): AuditTracker {
-    return new AuditTrackerImpl(event, context, options);
+/**
+ * Clase utilitaria para manipular fechas usando Luxon
+ * Proporciona métodos estáticos para crear, formatear y manipular fechas
+ */
+export class DateUtils {
+  /**
+   * Crea una fecha actual en UTC
+   * @returns DateTime en UTC
+   */
+  static now(): DateTime {
+    return DateTime.utc();
   }
-}
 
-class AuditTrackerImpl implements AuditTracker {
-  constructor(
-    private event: any,
-    private context: any,
-    private options: { action: string; location: string }
-  ) {}
+  /**
+   * Crea una fecha desde un string ISO
+   * @param isoString - String en formato ISO (ej: "2023-12-25T10:30:00Z")
+   * @returns DateTime parseada
+   */
+  static fromISO(isoString: string): DateTime {
+    return DateTime.fromISO(isoString);
+  }
 
-  async success(result: any): Promise<void> {
-    console.log('Audit Success:', {
-      action: this.options.action,
-      location: this.options.location,
-      result: result,
-      timestamp: new Date().toISOString()
+  /**
+   * Crea una fecha desde un timestamp Unix
+   * @param timestamp - Timestamp en segundos
+   * @returns DateTime
+   */
+  static fromTimestamp(timestamp: number): DateTime {
+    return DateTime.fromSeconds(timestamp);
+  }
+
+  /**
+   * Crea una fecha desde un objeto Date de JavaScript
+   * @param date - Objeto Date de JavaScript
+   * @returns DateTime
+   */
+  static fromJSDate(date: Date): DateTime {
+    return DateTime.fromJSDate(date);
+  }
+
+  /**
+   * Crea una fecha desde componentes individuales
+   * @param year - Año
+   * @param month - Mes (1-12)
+   * @param day - Día
+   * @param hour - Hora (opcional)
+   * @param minute - Minuto (opcional)
+   * @param second - Segundo (opcional)
+   * @returns DateTime
+   */
+  static fromComponents(
+    year: number,
+    month: number,
+    day: number,
+    hour: number = 0,
+    minute: number = 0,
+    second: number = 0
+  ): DateTime {
+    return DateTime.utc(year, month, day, hour, minute, second);
+  }
+
+  /**
+   * Formatea una fecha a string ISO
+   * @param date - DateTime a formatear
+   * @returns String ISO
+   */
+  static toISO(date: DateTime): string {
+    return date.toISO() || '';
+  }
+
+  /**
+   * Formatea una fecha a string con formato personalizado
+   * @param date - DateTime a formatear
+   * @param format - Formato (ej: "yyyy-MM-dd HH:mm:ss")
+   * @returns String formateado
+   */
+  static format(date: DateTime, format: string): string {
+    return date.toFormat(format);
+  }
+
+  /**
+   * Formatea una fecha a formato legible
+   * @param date - DateTime a formatear
+   * @returns String legible (ej: "25 de diciembre de 2023")
+   */
+  static toReadable(date: DateTime): string {
+    return date.toLocaleString(DateTime.DATE_FULL);
+  }
+
+  /**
+   * Obtiene el timestamp Unix de una fecha
+   * @param date - DateTime
+   * @returns Timestamp en segundos
+   */
+  static toTimestamp(date: DateTime): number {
+    return date.toSeconds();
+  }
+
+  /**
+   * Convierte DateTime a objeto Date de JavaScript
+   * @param date - DateTime
+   * @returns Objeto Date de JavaScript
+   */
+  static toJSDate(date: DateTime): Date {
+    return date.toJSDate();
+  }
+
+  /**
+   * Suma tiempo a una fecha
+   * @param date - Fecha base
+   * @param duration - Duración a sumar (ej: { days: 1, hours: 2 })
+   * @returns Nueva DateTime
+   */
+  static add(date: DateTime, duration: Duration | object): DateTime {
+    if (duration instanceof Duration) {
+      return date.plus(duration);
+    }
+    return date.plus(duration);
+  }
+
+  /**
+   * Resta tiempo de una fecha
+   * @param date - Fecha base
+   * @param duration - Duración a restar (ej: { days: 1, hours: 2 })
+   * @returns Nueva DateTime
+   */
+  static subtract(date: DateTime, duration: Duration | object): DateTime {
+    if (duration instanceof Duration) {
+      return date.minus(duration);
+    }
+    return date.minus(duration);
+  }
+
+  /**
+   * Compara dos fechas
+   * @param date1 - Primera fecha
+   * @param date2 - Segunda fecha
+   * @returns -1 si date1 < date2, 0 si son iguales, 1 si date1 > date2
+   */
+  static compare(date1: DateTime, date2: DateTime): number {
+    if (date1 < date2) return -1;
+    if (date1 > date2) return 1;
+    return 0;
+  }
+
+  /**
+   * Verifica si una fecha está entre dos fechas
+   * @param date - Fecha a verificar
+   * @param start - Fecha de inicio
+   * @param end - Fecha de fin
+   * @returns true si está en el rango
+   */
+  static isBetween(date: DateTime, start: DateTime, end: DateTime): boolean {
+    return date >= start && date <= end;
+  }
+
+  /**
+   * Obtiene la diferencia entre dos fechas
+   * @param date1 - Primera fecha
+   * @param date2 - Segunda fecha
+   * @returns Duration entre las fechas
+   */
+  static diff(date1: DateTime, date2: DateTime): Duration {
+    return date1.diff(date2);
+  }
+
+  /**
+   * Obtiene el inicio del día
+   * @param date - Fecha base
+   * @returns DateTime al inicio del día (00:00:00)
+   */
+  static startOfDay(date: DateTime): DateTime {
+    return date.startOf('day');
+  }
+
+  /**
+   * Obtiene el final del día
+   * @param date - Fecha base
+   * @returns DateTime al final del día (23:59:59.999)
+   */
+  static endOfDay(date: DateTime): DateTime {
+    return date.endOf('day');
+  }
+
+  /**
+   * Obtiene el inicio del mes
+   * @param date - Fecha base
+   * @returns DateTime al inicio del mes
+   */
+  static startOfMonth(date: DateTime): DateTime {
+    return date.startOf('month');
+  }
+
+  /**
+   * Obtiene el final del mes
+   * @param date - Fecha base
+   * @returns DateTime al final del mes
+   */
+  static endOfMonth(date: DateTime): DateTime {
+    return date.endOf('month');
+  }
+
+  /**
+   * Obtiene el inicio del año
+   * @param date - Fecha base
+   * @returns DateTime al inicio del año
+   */
+  static startOfYear(date: DateTime): DateTime {
+    return date.startOf('year');
+  }
+
+  /**
+   * Obtiene el final del año
+   * @param date - Fecha base
+   * @returns DateTime al final del año
+   */
+  static endOfYear(date: DateTime): DateTime {
+    return date.endOf('year');
+  }
+
+  /**
+   * Verifica si una fecha es válida
+   * @param date - DateTime a verificar
+   * @returns true si es válida
+   */
+  static isValid(date: DateTime): boolean {
+    return date.isValid;
+  }
+
+  /**
+   * Obtiene el error de una fecha inválida
+   * @param date - DateTime inválida
+   * @returns String con el error
+   */
+  static getInvalidReason(date: DateTime): string | null {
+    return date.invalidReason;
+  }
+
+  /**
+   * Convierte una fecha a una zona horaria específica
+   * @param date - DateTime a convertir
+   * @param zone - Zona horaria (ej: "America/Mexico_City")
+   * @returns DateTime en la zona horaria especificada
+   */
+  static setZone(date: DateTime, zone: string): DateTime {
+    return date.setZone(zone);
+  }
+
+  /**
+   * Obtiene la zona horaria de una fecha
+   * @param date - DateTime
+   * @returns String con la zona horaria
+   */
+  static getZone(date: DateTime): string {
+    return date.zoneName || '';
+  }
+
+  /**
+   * Crea una duración desde un objeto
+   * @param duration - Objeto con duración (ej: { days: 1, hours: 2, minutes: 30 })
+   * @returns Duration
+   */
+  static createDuration(duration: object): Duration {
+    return Duration.fromObject(duration);
+  }
+
+  /**
+   * Crea una duración desde un string ISO
+   * @param isoString - String ISO de duración (ej: "P1DT2H30M")
+   * @returns Duration
+   */
+  static durationFromISO(isoString: string): Duration {
+    return Duration.fromISO(isoString);
+  }
+
+  /**
+   * Convierte una duración a milisegundos
+   * @param duration - Duration
+   * @returns Milisegundos
+   */
+  static durationToMillis(duration: Duration): number {
+    return duration.as('milliseconds');
+  }
+
+  /**
+   * Convierte una duración a segundos
+   * @param duration - Duration
+   * @returns Segundos
+   */
+  static durationToSeconds(duration: Duration): number {
+    return duration.as('seconds');
+  }
+
+  /**
+   * Convierte una duración a minutos
+   * @param duration - Duration
+   * @returns Minutos
+   */
+  static durationToMinutes(duration: Duration): number {
+    return duration.as('minutes');
+  }
+
+  /**
+   * Convierte una duración a horas
+   * @param duration - Duration
+   * @returns Horas
+   */
+  static durationToHours(duration: Duration): number {
+    return duration.as('hours');
+  }
+
+  /**
+   * Convierte una duración a días
+   * @param duration - Duration
+   * @returns Días
+   */
+  static durationToDays(duration: Duration): number {
+    return duration.as('days');
+  }
+}`;
+  }
+
+  private getAwsSecretManager(): string {
+    return `import { SecretsManager } from 'aws-sdk';
+import { IAwsSecretService } from '../domain/ports/IAwsSecretService';
+
+export class AwsSecretManager implements IAwsSecretService {
+  private readonly secretsManager: SecretsManager;
+
+  constructor() {
+    this.secretsManager = new SecretsManager({
+      region: process.env.AWS_REGION || 'us-east-1'
     });
   }
 
-  async error(error: any): Promise<void> {
-    console.log('Audit Error:', {
-      action: this.options.action,
-      location: this.options.location,
-      error: error,
-      timestamp: new Date().toISOString()
-    });
+  async getSecret(secretName: string): Promise<string> {
+    try {
+      const result = await this.secretsManager.getSecretValue({
+        SecretId: secretName
+      }).promise();
+
+      return result.SecretString || '';
+    } catch (error) {
+      console.error('Error getting secret:', error);
+      throw new Error(\`Failed to get secret: \${secretName}\`);
+    }
+  }
+
+  async getSecretValue(secretName: string, key: string): Promise<string> {
+    try {
+      const secretString = await this.getSecret(secretName);
+      const secretObject = JSON.parse(secretString);
+      return secretObject[key] || '';
+    } catch (error) {
+      console.error('Error getting secret value:', error);
+      throw new Error(\`Failed to get secret value: \${secretName}.\${key}\`);
+    }
   }
 }`;
   }
@@ -1111,14 +1406,13 @@ describe('AWS Hexagonal Architecture Lambda Handler', () => {
   }
 
   private getMainFile(): string {
-    return `import { AuditTracker } from '@wallytech/sdk-audit';
+    return `import { Audit, AuditTracker } from '@wallytech/sdk-audit';
 import { APIGatewayProxyEvent, APIGatewayProxyResult, Context } from 'aws-lambda';
 import { DynamoCustomerRepository } from './adapters/repository/DynamoCustomerRepository';
 import { GetCustomerCommandHandler } from './domain/command_handlers/GetCustomerCommandHandler';
 import { ExampleController } from './entrypoints/api/ExampleController';
-import { Audit } from './infra/Audit';
 import Logger from './infra/Logger';
-import { AUDIT_OVERRIDES } from './domain/common/consts/audit.constants';
+import { AUDIT_OVERRIDES } from './domain/common/consts/AuditConstants';
 
 export const handler = async (
   event: APIGatewayProxyEvent,
@@ -1142,7 +1436,7 @@ export const handler = async (
     const result = await exampleController.handle(event);
     await auditTracker.success(result);
     return result;
-  } catch (error) {
+  } catch (error: any) {
     Logger.getInstance().error('Error in handler:', { raw: error, error: { error }, extra: {} });
     await auditTracker.error(error);
     return {
@@ -1219,10 +1513,39 @@ export class InputExample {
     '^@/(.*)$': '<rootDir>/src/$1'
   },
   transform: {
-    '^.+\.ts$': ['ts-jest', {
+    '^.+\\\\.ts$': ['ts-jest', {
       tsconfig: 'tsconfig.test.json'
     }]
   },  
 }; `;
+  }
+
+  private getTsConfigTest(): string {
+    return `{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "types": ["jest", "node"],
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "noImplicitAny": false,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "outDir": "./dist-test",
+    "typeRoots": ["./node_modules/@types", "./test/types"]
+  },
+  "include": [
+    "src/**/*",
+    "test/**/*",
+    "test/types/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "dist-test"
+  ]
+}`;
   }
 }

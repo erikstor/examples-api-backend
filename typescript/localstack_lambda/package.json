@@ -1,0 +1,46 @@
+{
+  "name": "localstack-lambda-typescript",
+  "version": "1.0.0",
+  "description": "Lambda con TypeScript usando LocalStack y DynamoDB con arquitectura en capas",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "webpack --mode production",
+    "build:dev": "webpack --mode development",
+    "watch": "webpack --mode development --watch",
+    "init-db": "ts-node scripts/init-dynamodb.ts",
+    "deploy": "npm run build && bash scripts/deploy-lambda.sh",
+    "deploy:windows": "npm run build && pwsh scripts/deploy-lambda.ps1",
+    "setup-api": "bash scripts/setup-api-gateway.sh",
+    "setup-api:windows": "pwsh scripts/setup-api-gateway.ps1",
+    "invoke": "bash scripts/invoke-lambda.sh",
+    "test": "ts-node scripts/test-lambda.ts",
+    "clean": "rm -rf dist",
+    "local": "ts-node src/local.ts"
+  },
+  "keywords": [
+    "lambda",
+    "localstack",
+    "dynamodb",
+    "typescript",
+    "webpack",
+    "layered-architecture"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.645.0",
+    "@aws-sdk/lib-dynamodb": "^3.645.0",
+    "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.119",
+    "@types/node": "^20.10.5",
+    "@types/uuid": "^9.0.7",
+    "dotenv": "^16.3.1",
+    "ts-loader": "^9.5.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3",
+    "webpack": "^5.89.0",
+    "webpack-cli": "^5.1.4"
+  }
+}

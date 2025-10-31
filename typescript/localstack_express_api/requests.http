@@ -1,0 +1,72 @@
+### Variables
+@baseUrl = http://localhost:3000
+@apiUrl = {{baseUrl}}/api/users
+
+### Health Check
+GET {{baseUrl}}/health
+
+### Create User 1
+POST {{apiUrl}}
+Content-Type: application/json
+
+{
+  "email": "john.doe@example.com",
+  "name": "John Doe",
+  "age": 30
+}
+
+### Create User 2
+POST {{apiUrl}}
+Content-Type: application/json
+
+{
+  "email": "jane.smith@example.com",
+  "name": "Jane Smith",
+  "age": 25
+}
+
+### Create User 3
+POST {{apiUrl}}
+Content-Type: application/json
+
+{
+  "email": "bob.wilson@example.com",
+  "name": "Bob Wilson"
+}
+
+### Get All Users
+GET {{apiUrl}}
+
+### Get User by ID (replace with actual ID)
+GET {{apiUrl}}/123e4567-e89b-12d3-a456-426614174000
+
+### Update User (replace with actual ID)
+PUT {{apiUrl}}/123e4567-e89b-12d3-a456-426614174000
+Content-Type: application/json
+
+{
+  "name": "John Updated Doe",
+  "age": 31
+}
+
+### Delete User (replace with actual ID)
+DELETE {{apiUrl}}/123e4567-e89b-12d3-a456-426614174000
+
+### Try to create user with existing email (should fail)
+POST {{apiUrl}}
+Content-Type: application/json
+
+{
+  "email": "john.doe@example.com",
+  "name": "Another John",
+  "age": 40
+}
+
+### Try to create user without required fields (should fail)
+POST {{apiUrl}}
+Content-Type: application/json
+
+{
+  "age": 25
+}
+

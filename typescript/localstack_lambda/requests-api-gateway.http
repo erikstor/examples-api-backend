@@ -1,0 +1,137 @@
+### Variables - API Gateway
+# IMPORTANTE: Reemplaza {API_ID} con el ID real de tu API Gateway
+# Lo obtienes después de ejecutar: npm run setup-api
+# O lo encuentras en el archivo .env.api
+
+@endpoint = http://localhost:4566
+@apiId = YOUR_API_ID_HERE
+@stage = dev
+@baseUrl = {{endpoint}}/restapis/{{apiId}}/{{stage}}/_user_request_
+
+### ============================================
+### API Gateway - User Handler Tests
+### ============================================
+
+### Test 1: Get API Info
+# @name getApiInfo
+GET {{baseUrl}}/
+Content-Type: application/json
+
+### Test 2: Create User - John Doe
+# @name createUserJohn
+POST {{baseUrl}}/user
+Content-Type: application/json
+
+{
+  "email": "john.doe@example.com",
+  "name": "John Doe",
+  "age": 30
+}
+
+### Test 3: Get or Create User - John Doe (should return existing)
+# @name getOrCreateUserJohn
+POST {{baseUrl}}/user
+Content-Type: application/json
+
+{
+  "email": "john.doe@example.com",
+  "name": "John Doe",
+  "age": 30
+}
+
+### Test 4: Create User - Jane Smith
+# @name createUserJane
+POST {{baseUrl}}/user
+Content-Type: application/json
+
+{
+  "email": "jane.smith@example.com",
+  "name": "Jane Smith",
+  "age": 25
+}
+
+### Test 5: Create User - Bob Wilson
+# @name createUserBob
+POST {{baseUrl}}/user
+Content-Type: application/json
+
+{
+  "email": "bob.wilson@example.com",
+  "name": "Bob Wilson",
+  "age": 35
+}
+
+### Test 6: Get User by ID
+# @name getUserById
+# IMPORTANTE: Reemplaza {user-id} con un ID real de un usuario creado
+GET {{baseUrl}}/user/123e4567-e89b-12d3-a456-426614174000
+
+### Test 7: Create User with Invalid Email (should fail)
+# @name createUserInvalidEmail
+POST {{baseUrl}}/user
+Content-Type: application/json
+
+{
+  "email": "invalid-email",
+  "name": "Invalid User",
+  "age": 30
+}
+
+### Test 8: Create User without Name (should fail)
+# @name createUserNoName
+POST {{baseUrl}}/user
+Content-Type: application/json
+
+{
+  "email": "test@example.com"
+}
+
+### Test 9: Create User with Invalid Age (should fail)
+# @name createUserInvalidAge
+POST {{baseUrl}}/user
+Content-Type: application/json
+
+{
+  "email": "test2@example.com",
+  "name": "Test User",
+  "age": 200
+}
+
+### Test 10: Get Non-existent User
+# @name getUserNotFound
+GET {{baseUrl}}/user/non-existent-id
+
+### ============================================
+### Ejemplos con curl
+### ============================================
+
+### Obtener info de la API
+# curl http://localhost:4566/restapis/{API_ID}/dev/_user_request_/
+
+### Crear usuario
+# curl -X POST http://localhost:4566/restapis/{API_ID}/dev/_user_request_/user \
+#   -H 'Content-Type: application/json' \
+#   -d '{"email":"test@example.com","name":"Test User","age":30}'
+
+### Obtener usuario por ID
+# curl http://localhost:4566/restapis/{API_ID}/dev/_user_request_/user/{user-id}
+
+### ============================================
+### Comandos útiles de AWS CLI
+### ============================================
+
+### Listar APIs
+# aws --endpoint-url=http://localhost:4566 apigateway get-rest-apis
+
+### Obtener información de una API
+# aws --endpoint-url=http://localhost:4566 apigateway get-rest-api --rest-api-id {API_ID}
+
+### Listar recursos de una API
+# aws --endpoint-url=http://localhost:4566 apigateway get-resources --rest-api-id {API_ID}
+
+### Listar deployments
+# aws --endpoint-url=http://localhost:4566 apigateway get-deployments --rest-api-id {API_ID}
+
+### Eliminar API
+# aws --endpoint-url=http://localhost:4566 apigateway delete-rest-api --rest-api-id {API_ID}
+
